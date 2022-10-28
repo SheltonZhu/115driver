@@ -1,6 +1,7 @@
 package driver
 
 const (
+	// login
 	ApiLoginCheck = "https://passportapi.115.com/app/1.0/web/1.0/check/sso"
 
 	// dir
@@ -14,4 +15,7 @@ const (
 
 	ApiFileList       = "https://webapi.115.com/files"
 	ApiFileListByName = "https://aps.115.com/natsort/files.php"
+
+	// download
+	ApiDownloadGetUrl = "https://proapi.115.com/app/chrome/downurl"
 )

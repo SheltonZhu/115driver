@@ -88,3 +88,17 @@ func TestList(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Empty(t, *f)
 }
+
+func TestDownload(t *testing.T) {
+	down := teardown(t)
+	defer down(t)
+
+	pickCode := NowMilli().String()
+	_, err := client.Download(pickCode)
+	assert.ErrorIs(t, ErrPickCodeNotExist, err)
+	_, err = client.Download("")
+	assert.ErrorIs(t, ErrPickCodeisEmpty, err)
+	f, err := client.Download("arod1twvavfexh9cv")
+	assert.NotEmpty(t, f)
+	assert.Nil(t, err)
+}

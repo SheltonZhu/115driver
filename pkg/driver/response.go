@@ -31,6 +31,7 @@ type BasicResponse struct {
 	Error   string    `json:"error,omitempty"`
 	State   bool      `json:"state,omitempty"`
 	Errtype string    `json:"errtype,omitempty"`
+	Msg     string    `json:"msg,omitempty"`
 }
 
 func (resp *BasicResponse) Err(respBody ...string) error {

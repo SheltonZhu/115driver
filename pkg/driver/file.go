@@ -70,3 +70,27 @@ func (f *File) from(fileInfo *FileInfo) *File {
 
 	return f
 }
+
+func (f File) GetPath() string {
+	return ""
+}
+
+func (f File) GetSize() int64 {
+	return f.Size
+}
+
+func (f File) GetName() string {
+	return f.Name
+}
+
+func (f File) ModTime() time.Time {
+	return f.UpdateTime
+}
+
+func (f File) IsDir() bool {
+	return f.IsDirectory
+}
+
+func (f File) GetID() string {
+	return f.FileID
+}

@@ -54,6 +54,10 @@ var (
 
 	ErrRepeatLogin = errors.New("repeat login")
 
+	ErrPickCodeNotExist = errors.New("pickcode does not exist")
+
+	ErrPickCodeisEmpty = errors.New("empty pickcode")
+
 	errMap = map[int]error{
 		// Normal errors
 		99:     ErrNotLogin,
@@ -82,6 +86,9 @@ var (
 		// Params errors
 		200900: ErrWrongParams,
 		990002: ErrWrongParams,
+		//Pickcode
+		50003: ErrPickCodeNotExist,
+		50001: ErrPickCodeisEmpty,
 	}
 )
 

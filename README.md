@@ -1,6 +1,6 @@
 # 115driver
 
-![Version](https://img.shields.io/badge/release-v1.0.4-brightgreen?style=flat-square) [![Reference](https://img.shields.io/badge/Go-Reference-blue.svg?style=flat-square)](https://pkg.go.dev/github.com/SheltonZhu/115driver) ![License](https://img.shields.io/:License-MIT-green.svg?style=flat-square)
+![Version](https://img.shields.io/badge/release-v1.0.5-brightgreen?style=flat-square) [![Reference](https://img.shields.io/badge/Go-Reference-blue.svg?style=flat-square)](https://pkg.go.dev/github.com/SheltonZhu/115driver) ![License](https://img.shields.io/:License-MIT-green.svg?style=flat-square)
 
 ## Example
 
@@ -43,7 +43,7 @@ More examples can be found in [reference](https://pkg.go.dev/github.com/SheltonZ
   * [X] Copy
   * [X] Delete
   * [X] Make Directory
-  * [ ] Download
+  * [x] Download
   * [ ] Upload
   * [ ] Search
   * [ ] Get Information by ID
