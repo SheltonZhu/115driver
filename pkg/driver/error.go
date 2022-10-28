@@ -58,6 +58,8 @@ var (
 
 	ErrPickCodeisEmpty = errors.New("empty pickcode")
 
+	ErrUploadSH1Invalid = errors.New("userid/filesize/target/pickcode invalid")
+
 	errMap = map[int]error{
 		// Normal errors
 		99:     ErrNotLogin,
@@ -86,9 +88,11 @@ var (
 		// Params errors
 		200900: ErrWrongParams,
 		990002: ErrWrongParams,
-		//Pickcode
+		//PickCode
 		50003: ErrPickCodeNotExist,
 		50001: ErrPickCodeisEmpty,
+		// upload SH1
+		402: ErrUploadSH1Invalid,
 	}
 )
 

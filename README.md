@@ -44,6 +44,7 @@ More examples can be found in [reference](https://pkg.go.dev/github.com/SheltonZ
   * [X] Delete
   * [X] Make Directory
   * [x] Download
+  * [x] Upload SHA1
   * [ ] Upload
   * [ ] Search
   * [ ] Get Information by ID

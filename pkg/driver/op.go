@@ -15,7 +15,7 @@ func (c *Pan115Client) Delete(fileIDs ...string) error {
 	}
 
 	result := BasicResponse{}
-	req := c.GetRequest().
+	req := c.NewRequest().
 		SetFormData(form).
 		ForceContentType("application/json;charset=UTF-8").
 		SetResult(&result)
@@ -31,7 +31,7 @@ func (c *Pan115Client) Rename(fileID, newName string) error {
 	}
 
 	result := BasicResponse{}
-	req := c.GetRequest().
+	req := c.NewRequest().
 		SetFormData(form).
 		ForceContentType("application/json;charset=UTF-8").
 		SetResult(&result)
@@ -51,7 +51,7 @@ func (c *Pan115Client) Move(dirID string, fileIDs ...string) error {
 		form[key] = value
 	}
 	result := BasicResponse{}
-	req := c.GetRequest().
+	req := c.NewRequest().
 		SetFormData(form).
 		ForceContentType("application/json;charset=UTF-8").
 		SetResult(&result)
@@ -71,7 +71,7 @@ func (c *Pan115Client) Copy(dirID string, fileIDs ...string) error {
 		form[key] = value
 	}
 	result := BasicResponse{}
-	req := c.GetRequest().
+	req := c.NewRequest().
 		SetFormData(form).
 		ForceContentType("application/json;charset=UTF-8").
 		SetResult(&result)

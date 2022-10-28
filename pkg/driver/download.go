@@ -37,7 +37,7 @@ func (c *Pan115Client) Download(pickCode string) (*DownloadInfo, error) {
 	}
 
 	data := crypto.Encode(params, key)
-	req := c.GetRequest().
+	req := c.NewRequest().
 		SetQueryParam("t", Now().String()).
 		SetFormData(map[string]string{"data": data}).
 		ForceContentType("application/json").

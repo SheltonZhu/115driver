@@ -12,7 +12,7 @@ func (c *Pan115Client) Mkdir(parentID string, name string) (string, error) {
 		"pid":   parentID,
 		"cname": name,
 	}
-	req := c.GetRequest().
+	req := c.NewRequest().
 		SetFormData(form).
 		SetResult(&result).
 		ForceContentType("application/json;charset=UTF-8")
@@ -38,7 +38,7 @@ const (
 func (c *Pan115Client) List(dirID string) (*[]File, error) {
 	var files []File
 	offset := int64(0)
-	req := c.GetRequest().ForceContentType("application/json;charset=UTF-8")
+	req := c.NewRequest().ForceContentType("application/json;charset=UTF-8")
 	for {
 		result, err := GetFiles(req, dirID, FileListLimit, offset)
 		if err != nil {

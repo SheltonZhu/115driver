@@ -6,7 +6,7 @@ type LoginResp struct {
 	Data     struct {
 		Expire int    `json:"expire"`
 		Link   string `json:"link"`
-		UserID int    `json:"user_id"`
+		UserID int64  `json:"user_id"`
 	} `json:"data"`
 	Errno   int    `json:"errno"`
 	Error   string `json:"error"`
@@ -109,4 +109,66 @@ type LabelInfo struct {
 
 	CreateTime int64 `json:"create_time"`
 	UpdateTime int64 `json:"update_time"`
+}
+type UploadInfoResp struct {
+	BasicResponse
+	UploadMetaInfo
+	UserID  int64  `json:"user_id"`
+	Userkey string `json:"userkey"`
+}
+
+type UploadMetaInfo struct {
+	AppID            int64    `json:"app_id"`
+	AppVersion       int64    `json:"app_version"`
+	IspType          int64    `json:"isp_type"`
+	MaxDirLevel      int64    `json:"max_dir_level"`
+	MaxDirLevelYun   int64    `json:"max_dir_level_yun"`
+	MaxFileNum       int64    `json:"max_file_num"`
+	MaxFileNumYun    int64    `json:"max_file_num_yun"`
+	SizeLimit        int64    `json:"size_limit"`
+	SizeLimitYun     int64    `json:"size_limit_yun"`
+	TypeLimit        []string `json:"type_limit"`
+	UploadAllowed    bool     `json:"upload_allowed"`
+	UploadAllowedMsg string   `json:"upload_allowed_msg"`
+}
+
+type UploadInitResp struct {
+	Request   string `json:"request"`
+	ErrorCode int    `json:"statuscode"`
+	ErrorMsg  string `json:"statusmsg"`
+
+	Status   BoolInt `json:"status"`
+	PickCode string  `json:"pickcode"`
+	Target   string  `json:"target"`
+	Version  string  `json:"version"`
+
+	// OSS upload fields
+	Bucket   string `json:"bucket"`
+	Object   string `json:"object"`
+	Callback struct {
+		Callback    string `json:"callback"`
+		CallbackVar string `json:"callback_var"`
+	} `json:"callback"`
+
+	// Useless fields
+	FileId   int    `json:"fileid"`
+	FileInfo string `json:"fileinfo"`
+}
+
+func (r *UploadInitResp) Err(respBody ...string) error {
+	if r.ErrorCode == 0 {
+		return nil
+	}
+	return GetErr(r.ErrorCode, r.ErrorMsg)
+}
+
+func (r *UploadInitResp) Ok() (bool, error) {
+	switch r.Status {
+	case 2:
+		return true, nil
+	case 1:
+		return false, nil
+	default:
+		return false, ErrUnexpected
+	}
 }

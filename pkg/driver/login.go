@@ -10,10 +10,11 @@ import (
 
 func (c *Pan115Client) LoginCheck() error {
 	result := LoginResp{}
-	req := c.GetRequest().
+	req := c.NewRequest().
 		SetQueryParam("_", NowMilli().String()).
 		SetResult(&result)
 	resp, err := req.Get(ApiLoginCheck)
+	c.UserID = result.Data.UserID
 	return CheckErr(err, &result, resp)
 }
 

@@ -7,8 +7,11 @@ import (
 )
 
 type Pan115Client struct {
-	Client  *resty.Client
-	Request *resty.Request
+	Client         *resty.Client
+	Request        *resty.Request
+	UserID         int64
+	Userkey        string
+	UploadMetaInfo *UploadMetaInfo
 }
 
 // New creates Client with customized options.

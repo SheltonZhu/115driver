@@ -18,4 +18,8 @@ const (
 
 	// download
 	ApiDownloadGetUrl = "https://proapi.115.com/app/chrome/downurl"
+
+	// upload
+	ApiUploadInfo = "https://proapi.115.com/app/uploadinfo"
+	ApiUploadInit = "https://uplb.115.com/3.0/initupload.php"
 )

@@ -2,6 +2,7 @@ package driver
 
 import (
 	"math/rand"
+	"strings"
 	"testing"
 	"time"
 
@@ -98,7 +99,21 @@ func TestDownload(t *testing.T) {
 	assert.ErrorIs(t, ErrPickCodeNotExist, err)
 	_, err = client.Download("")
 	assert.ErrorIs(t, ErrPickCodeisEmpty, err)
-	f, err := client.Download("arod1twvavfexh9cv")
-	assert.NotEmpty(t, f)
+}
+
+func TestGetUploadInfo(t *testing.T) {
+	down := teardown(t)
+	defer down(t)
+
+	assert.Nil(t, client.GetUploadInfo())
+}
+func TestUploadSH1(t *testing.T) {
+	down := teardown(t)
+	defer down(t)
+
+	r := strings.NewReader(NowMilli().String())
+	d, err := client.GetDigestResult(r)
+	assert.Nil(t, err)
+	_, err = client.UploadSH1(d.Size, "xxx.txt", "0", d.PreId, d.QuickId)
 	assert.Nil(t, err)
 }
