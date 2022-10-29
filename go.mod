@@ -3,6 +3,7 @@ module github.com/SheltonZhu/115driver
 go 1.19
 
 require (
+	github.com/aliyun/aliyun-oss-go-sdk v2.2.5+incompatible
 	github.com/gaoyb7/115drive-webdav v0.1.8
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/orzogc/fake115uploader v0.3.3-0.20221009101310-08b764073b77

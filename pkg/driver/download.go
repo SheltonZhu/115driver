@@ -23,7 +23,7 @@ type DownloadInfo struct {
 type DownloadData map[string]*DownloadInfo
 
 type DownloadReap struct {
-	BasicResponse
+	BasicResp
 	EncodedData string `json:"data,omitempty"`
 }
 

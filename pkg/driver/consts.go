@@ -17,3 +17,8 @@ const (
 	CookieNameCid  = "CID"
 	CookieNameSeid = "SEID"
 )
+
+const (
+	OssRegionId = "oss-cn-shenzhen"
+	OssEndpoint = "oss-cn-shenzhen.aliyuncs.com"
+)

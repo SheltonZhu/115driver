@@ -38,6 +38,8 @@ var (
 
 	ErrUploadTooLarge = errors.New("upload reach the limit")
 
+	ErrUploadFailed = errors.New("upload failed")
+
 	ErrImportDirectory = errors.New("can not import directory")
 
 	ErrDownloadEmpty = errors.New("can not get download URL")

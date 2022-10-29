@@ -22,3 +22,9 @@ func (t Time) String() string {
 func (t Time) ToInt64() int64 {
 	return int64(t)
 }
+
+func Date() string {
+	GMT, _ := time.LoadLocation("GMT")
+	now := time.Now().In(GMT)
+	return now.Format(time.RFC1123)
+}

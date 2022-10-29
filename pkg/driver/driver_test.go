@@ -1,6 +1,7 @@
 package driver
 
 import (
+	"io"
 	"math/rand"
 	"strings"
 	"testing"
@@ -116,4 +117,40 @@ func TestUploadSH1(t *testing.T) {
 	assert.Nil(t, err)
 	_, err = client.UploadSH1(d.Size, "xxx.txt", "0", d.PreId, d.QuickId)
 	assert.Nil(t, err)
+}
+
+func TestGetOssToken(t *testing.T) {
+	down := teardown(t)
+	defer down(t)
+
+	token, err := client.GetOssToken()
+	assert.Nil(t, err)
+	_ = token
+}
+
+func TestUploadOss(t *testing.T) {
+	down := teardown(t)
+	defer down(t)
+
+	randStr := NowMilli().String()
+	r := strings.NewReader(randStr)
+	d, err := client.GetDigestResult(r)
+	assert.Nil(t, err)
+	_, err = r.Seek(0, io.SeekStart)
+	assert.Nil(t, err)
+	resp, err := client.UploadSH1(d.Size, randStr+".txt", "0", d.PreId, d.QuickId)
+	assert.Nil(t, err)
+	ok, err := resp.Ok()
+	assert.Nil(t, err)
+	assert.False(t, ok)
+	assert.Nil(t, client.UploadByOss(&resp.UploadOssParams, r, "0"))
+}
+
+func TestUpload(t *testing.T) {
+	down := teardown(t)
+	defer down(t)
+
+	randStr := NowMilli().String()
+	r := strings.NewReader(randStr)
+	assert.Nil(t, client.UploadFastOrByOss("0", randStr+".txt", r.Size(), r))
 }

@@ -35,12 +35,68 @@ const (
 	FileListLimit = int64(56)
 )
 
-func (c *Pan115Client) List(dirID string) (*[]File, error) {
+type GetFileOption struct {
+	order    string
+	asc      string
+	pageSize int64
+	offset   int64
+	showDir  string
+}
+type GetFileOptions func(o *GetFileOption)
+
+func WithLimit(pageSize int64) GetFileOptions {
+	return func(o *GetFileOption) {
+		o.pageSize = pageSize
+	}
+}
+func WithOffset(offset int64) GetFileOptions {
+	return func(o *GetFileOption) {
+		o.offset = offset
+	}
+}
+func WithOrder(order string) GetFileOptions {
+	return func(o *GetFileOption) {
+		o.order = order
+	}
+}
+func WithShowDirEnable(e bool) GetFileOptions {
+	return func(o *GetFileOption) {
+		o.showDir = "0"
+		if e {
+			o.showDir = "1"
+		}
+	}
+}
+func (o *GetFileOption) GetOrder() string {
+	return o.order
+}
+func (o *GetFileOption) GetAsc() string {
+	return o.asc
+}
+func (o *GetFileOption) GetPageSize() string {
+	return strconv.FormatInt(o.pageSize, 10)
+}
+func (o *GetFileOption) GetOffset() string {
+	return strconv.FormatInt(o.offset, 10)
+}
+func (o *GetFileOption) GetshowDir() string {
+	return o.showDir
+}
+func DefaultGetFileOptions() *GetFileOption {
+	return &GetFileOption{
+		order:    FileOrderByName,
+		asc:      "1",
+		pageSize: int64(56),
+		offset:   int64(0),
+		showDir:  "1",
+	}
+}
+func (c *Pan115Client) List(dirID string, opts ...GetFileOptions) (*[]File, error) {
 	var files []File
 	offset := int64(0)
 	req := c.NewRequest().ForceContentType("application/json;charset=UTF-8")
 	for {
-		result, err := GetFiles(req, dirID, FileListLimit, offset)
+		result, err := GetFiles(req, dirID, WithLimit(FileListLimit), WithOffset(offset))
 		if err != nil {
 			return nil, err
 		}
@@ -55,27 +111,34 @@ func (c *Pan115Client) List(dirID string) (*[]File, error) {
 	return &files, nil
 }
 
-func GetFiles(req *resty.Request, dirID string, pageSize, offset int64) (*FileListResponse, error) {
-	result := FileListResponse{}
+func GetFiles(req *resty.Request, dirID string, opts ...GetFileOptions) (*FileListResp, error) {
+	o := DefaultGetFileOptions()
+	if len(opts) > 0 {
+		for _, opt := range opts {
+			opt(o)
+		}
+	}
+	result := FileListResp{}
 	params := map[string]string{
 		"aid":              "1",
 		"cid":              dirID,
-		"o":                FileOrderByName,
-		"asc":              "1",
-		"offset":           strconv.FormatInt(offset, 10),
-		"show_dir":         "1",
-		"limit":            strconv.FormatInt(pageSize, 10),
+		"o":                o.GetOrder(),
+		"asc":              o.GetAsc(),
+		"offset":           o.GetOffset(),
+		"show_dir":         o.GetshowDir(),
+		"limit":            o.GetPageSize(),
 		"snap":             "0",
 		"natsort":          "1",
 		"record_open_time": "1",
 		"format":           "json",
 		"fc_mix":           "0",
 	}
-	req = req.SetQueryParams(params).SetResult(&result)
+	req = req.SetQueryParams(params).
+		SetResult(&result)
 	resp, err := req.Get(ApiFileListByName)
 	err = CheckErr(err, &result, resp)
 	if dirID != string(result.CategoryID) {
-		return &FileListResponse{}, nil
+		return &FileListResp{}, nil
 	}
 	return &result, err
 }

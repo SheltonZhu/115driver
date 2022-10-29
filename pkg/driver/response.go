@@ -1,5 +1,11 @@
 package driver
 
+import (
+	"time"
+
+	"github.com/pkg/errors"
+)
+
 type LoginResp struct {
 	Code     int  `json:"code"`
 	CheckSsd bool `json:"check_ssd"`
@@ -25,7 +31,7 @@ func (resp *LoginResp) Err(respBody ...string) error {
 	return GetErr(resp.Code)
 }
 
-type BasicResponse struct {
+type BasicResp struct {
 	Errno   StringInt `json:"errno,omitempty"`
 	ErrNo   int       `json:"errNo,omitempty"`
 	Error   string    `json:"error,omitempty"`
@@ -34,7 +40,7 @@ type BasicResponse struct {
 	Msg     string    `json:"msg,omitempty"`
 }
 
-func (resp *BasicResponse) Err(respBody ...string) error {
+func (resp *BasicResp) Err(respBody ...string) error {
 	if resp.State {
 		return nil
 	}
@@ -55,7 +61,7 @@ func findNonZero(code ...int) int {
 }
 
 type MkdirResp struct {
-	BasicResponse
+	BasicResp
 	AreaID IntString `json:"aid"`
 
 	CategoryID   string `json:"cid"`
@@ -65,8 +71,8 @@ type MkdirResp struct {
 	FileName string `json:"file_name"`
 }
 
-type FileListResponse struct {
-	BasicResponse
+type FileListResp struct {
+	BasicResp
 
 	AreaID     string    `json:"aid"`
 	CategoryID IntString `json:"cid"`
@@ -111,7 +117,7 @@ type LabelInfo struct {
 	UpdateTime int64 `json:"update_time"`
 }
 type UploadInfoResp struct {
-	BasicResponse
+	BasicResp
 	UploadMetaInfo
 	UserID  int64  `json:"user_id"`
 	Userkey string `json:"userkey"`
@@ -143,16 +149,21 @@ type UploadInitResp struct {
 	Version  string  `json:"version"`
 
 	// OSS upload fields
+	UploadOssParams
+
+	// Useless fields
+	FileId   int    `json:"fileid"`
+	FileInfo string `json:"fileinfo"`
+}
+
+type UploadOssParams struct {
+	SHA1     string `json:"-"`
 	Bucket   string `json:"bucket"`
 	Object   string `json:"object"`
 	Callback struct {
 		Callback    string `json:"callback"`
 		CallbackVar string `json:"callback_var"`
 	} `json:"callback"`
-
-	// Useless fields
-	FileId   int    `json:"fileid"`
-	FileInfo string `json:"fileinfo"`
 }
 
 func (r *UploadInitResp) Err(respBody ...string) error {
@@ -171,4 +182,22 @@ func (r *UploadInitResp) Ok() (bool, error) {
 	default:
 		return false, ErrUnexpected
 	}
+}
+
+type UploadOssTokenResponse struct {
+	AccessKeyID     string    `json:"AccessKeyId"`
+	AccessKeySecret string    `json:"AccessKeySecret"`
+	Expiration      time.Time `json:"Expiration"`
+	SecurityToken   string    `json:"SecurityToken"`
+	StatusCode      string    `json:"StatusCode"`
+}
+
+func (r *UploadOssTokenResponse) Err(respBody ...string) error {
+	if r.StatusCode == "200" {
+		return nil
+	}
+	if len(respBody) > 0 {
+		return errors.Wrap(ErrUnexpected, respBody[0])
+	}
+	return ErrUnexpected
 }
