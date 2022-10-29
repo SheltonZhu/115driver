@@ -4,7 +4,7 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-// Mkdir make a new directory which name and parent directory id
+// Mkdir make a new directory which name and parent directory id, return directory id
 func (c *Pan115Client) Mkdir(parentID string, name string) (string, error) {
 	result := MkdirResp{}
 	form := map[string]string{
@@ -26,7 +26,7 @@ func (c *Pan115Client) Mkdir(parentID string, name string) (string, error) {
 }
 
 // List list files and directory with options
-func (c *Pan115Client) List(dirID string, opts ...GetFileOptions) (*[]File, error) {
+func (c *Pan115Client) List(dirID string) (*[]File, error) {
 	var files []File
 	offset := int64(0)
 	req := c.NewRequest().ForceContentType("application/json;charset=UTF-8")

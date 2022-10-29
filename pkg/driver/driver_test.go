@@ -119,16 +119,16 @@ func TestUploadSHA1(t *testing.T) {
 	assert.Nil(t, err)
 }
 
-func TestGetOssToken(t *testing.T) {
+func TestGetOSSToken(t *testing.T) {
 	down := teardown(t)
 	defer down(t)
 
-	token, err := client.GetOssToken()
+	token, err := client.GetOSSToken()
 	assert.Nil(t, err)
 	_ = token
 }
 
-func TestUploadOss(t *testing.T) {
+func TestUploadByOSS(t *testing.T) {
 	down := teardown(t)
 	defer down(t)
 
@@ -143,7 +143,7 @@ func TestUploadOss(t *testing.T) {
 	ok, err := resp.Ok()
 	assert.Nil(t, err)
 	assert.False(t, ok)
-	assert.Nil(t, client.UploadByOss(&resp.UploadOssParams, r, "0"))
+	assert.Nil(t, client.UploadByOSS(&resp.UploadOSSParams, r, "0"))
 }
 
 func TestUpload(t *testing.T) {
@@ -152,5 +152,5 @@ func TestUpload(t *testing.T) {
 
 	randStr := NowMilli().String()
 	r := strings.NewReader(randStr)
-	assert.Nil(t, client.UploadFastOrByOss("0", randStr+".txt", r.Size(), r))
+	assert.Nil(t, client.UploadFastOrByOSS("0", randStr+".txt", r.Size(), r))
 }

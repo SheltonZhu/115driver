@@ -49,8 +49,8 @@ func (c *Pan115Client) UploadAvailable() (bool, error) {
 	return true, nil
 }
 
-// UploadFastOrByOss check sha1 then upload
-func (c *Pan115Client) UploadFastOrByOss(dirID, fileName string, fileSize int64, r io.ReadSeeker) error {
+// UploadFastOrByOSS check sha1 then upload
+func (c *Pan115Client) UploadFastOrByOSS(dirID, fileName string, fileSize int64, r io.ReadSeeker) error {
 	var (
 		err      error
 		digest   *hash.DigestResult
@@ -81,16 +81,16 @@ func (c *Pan115Client) UploadFastOrByOss(dirID, fileName string, fileSize int64,
 		return err
 	}
 	// 闪传失败，普通上传
-	return c.UploadByOss(&fastInfo.UploadOssParams, r, dirID)
+	return c.UploadByOSS(&fastInfo.UploadOSSParams, r, dirID)
 }
 
-// UploadByOss use aliyun sdk to upload
-func (c *Pan115Client) UploadByOss(params *UploadOssParams, r io.Reader, dirID string) error {
-	ossToken, err := c.GetOssToken()
+// UploadByOSS use aliyun sdk to upload
+func (c *Pan115Client) UploadByOSS(params *UploadOSSParams, r io.Reader, dirID string) error {
+	ossToken, err := c.GetOSSToken()
 	if err != nil {
 		return err
 	}
-	ossClient, err := oss.New(OssEndpoint, ossToken.AccessKeyID, ossToken.AccessKeySecret)
+	ossClient, err := oss.New(OSSEndpoint, ossToken.AccessKeyID, ossToken.AccessKeySecret)
 	if err != nil {
 		return err
 	}
@@ -103,7 +103,7 @@ func (c *Pan115Client) UploadByOss(params *UploadOssParams, r io.Reader, dirID s
 		oss.SetHeader("X-OSS-Security-Token", ossToken.SecurityToken),
 		oss.Callback(base64.StdEncoding.EncodeToString([]byte(params.Callback.Callback))),
 		oss.CallbackVar(base64.StdEncoding.EncodeToString([]byte(params.Callback.CallbackVar))),
-		oss.UserAgentHeader(OssUserAgent),
+		oss.UserAgentHeader(OSSUserAgent),
 	}
 
 	if err = bucket.PutObject(params.Object, r, options...); err != nil {
@@ -130,14 +130,14 @@ func (c *Pan115Client) UploadByOss(params *UploadOssParams, r io.Reader, dirID s
 	return ErrUploadFailed
 }
 
-// GetOssToken get oss token for oss upload
-func (c *Pan115Client) GetOssToken() (*UploadOssTokenResp, error) {
-	result := UploadOssTokenResp{}
+// GetOSSToken get oss token for oss upload
+func (c *Pan115Client) GetOSSToken() (*UploadOSSTokenResp, error) {
+	result := UploadOSSTokenResp{}
 	req := c.NewRequest().
 		ForceContentType("application/json;charset=UTF-8").
 		SetResult(&result)
 
-	resp, err := req.Get(ApiUploadOssToken)
+	resp, err := req.Get(ApiUploadOSSToken)
 	return &result, CheckErr(err, &result, resp)
 }
 

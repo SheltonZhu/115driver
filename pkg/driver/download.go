@@ -12,7 +12,7 @@ import (
 
 type FileDownloadUrl struct {
 	Client int    `json:"client"`
-	OssId  string `json:"oss_id"`
+	OSSId  string `json:"oss_id"`
 	Url    string `json:"url"`
 }
 

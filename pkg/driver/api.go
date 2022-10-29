@@ -24,5 +24,5 @@ const (
 	ApiUploadInit = "https://uplb.115.com/3.0/initupload.php"
 
 	// oss
-	ApiUploadOssToken = "https://uplb.115.com/3.0/gettoken.php"
+	ApiUploadOSSToken = "https://uplb.115.com/3.0/gettoken.php"
 )

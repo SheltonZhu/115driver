@@ -151,14 +151,14 @@ type UploadInitResp struct {
 	Version  string  `json:"version"`
 
 	// OSS upload fields
-	UploadOssParams
+	UploadOSSParams
 
 	// Useless fields
 	FileId   int    `json:"fileid"`
 	FileInfo string `json:"fileinfo"`
 }
 
-type UploadOssParams struct {
+type UploadOSSParams struct {
 	SHA1     string `json:"-"`
 	Bucket   string `json:"bucket"`
 	Object   string `json:"object"`
@@ -187,7 +187,7 @@ func (r *UploadInitResp) Ok() (bool, error) {
 	}
 }
 
-type UploadOssTokenResp struct {
+type UploadOSSTokenResp struct {
 	AccessKeyID     string    `json:"AccessKeyId"`
 	AccessKeySecret string    `json:"AccessKeySecret"`
 	Expiration      time.Time `json:"Expiration"`
@@ -195,7 +195,7 @@ type UploadOssTokenResp struct {
 	StatusCode      string    `json:"StatusCode"`
 }
 
-func (r *UploadOssTokenResp) Err(respBody ...string) error {
+func (r *UploadOSSTokenResp) Err(respBody ...string) error {
 	if r.StatusCode == "200" {
 		return nil
 	}
