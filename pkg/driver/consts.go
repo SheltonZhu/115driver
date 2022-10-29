@@ -19,7 +19,7 @@ const (
 )
 
 const (
-	OSSRegionId = "oss-cn-shenzhen"
+	OSSRegionID = "oss-cn-shenzhen"
 	OSSEndpoint = "oss-cn-shenzhen.aliyuncs.com"
 
 	OSSUserAgent = "aliyun-sdk-android/2.9.1"

@@ -154,7 +154,7 @@ type UploadInitResp struct {
 	UploadOSSParams
 
 	// Useless fields
-	FileId   int    `json:"fileid"`
+	FileID   int    `json:"fileid"`
 	FileInfo string `json:"fileinfo"`
 }
 
@@ -188,7 +188,7 @@ func (r *UploadInitResp) Ok() (bool, error) {
 }
 
 type UploadOSSTokenResp struct {
-	AccessKeyID     string    `json:"AccessKeyId"`
+	AccessKeyID     string    `json:"AccessKeyID"`
 	AccessKeySecret string    `json:"AccessKeySecret"`
 	Expiration      time.Time `json:"Expiration"`
 	SecurityToken   string    `json:"SecurityToken"`

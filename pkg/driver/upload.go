@@ -68,7 +68,7 @@ func (c *Pan115Client) UploadFastOrByOSS(dirID, fileName string, fileSize int64,
 	}
 	// 闪传
 	if fastInfo, err = c.UploadSHA1(
-		digest.Size, fileName, dirID, digest.PreId, digest.QuickId,
+		digest.Size, fileName, dirID, digest.PreID, digest.QuickID,
 	); err != nil {
 		return err
 	}
@@ -235,7 +235,7 @@ func (c *Pan115Client) GenerateSignature(fileID, target string) string {
 
 func (c *Pan115Client) GenerateToken(fileID, preID, timeStamp, fileSize string) string {
 	userID := strconv.FormatInt(c.UserID, 10)
-	userIdMd5 := md5.Sum([]byte(userID))
-	tokenMd5 := md5.Sum([]byte(md5Salt + fileID + fileSize + preID + userID + timeStamp + hex.EncodeToString(userIdMd5[:]) + appVer))
+	userIDMd5 := md5.Sum([]byte(userID))
+	tokenMd5 := md5.Sum([]byte(md5Salt + fileID + fileSize + preID + userID + timeStamp + hex.EncodeToString(userIDMd5[:]) + appVer))
 	return hex.EncodeToString(tokenMd5[:])
 }

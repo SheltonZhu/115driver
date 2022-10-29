@@ -115,7 +115,7 @@ func TestUploadSHA1(t *testing.T) {
 	r := strings.NewReader(NowMilli().String())
 	d, err := client.GetDigestResult(r)
 	assert.Nil(t, err)
-	_, err = client.UploadSHA1(d.Size, "xxx.txt", "0", d.PreId, d.QuickId)
+	_, err = client.UploadSHA1(d.Size, "xxx.txt", "0", d.PreID, d.QuickID)
 	assert.Nil(t, err)
 }
 
@@ -138,7 +138,7 @@ func TestUploadByOSS(t *testing.T) {
 	assert.Nil(t, err)
 	_, err = r.Seek(0, io.SeekStart)
 	assert.Nil(t, err)
-	resp, err := client.UploadSHA1(d.Size, randStr+".txt", "0", d.PreId, d.QuickId)
+	resp, err := client.UploadSHA1(d.Size, randStr+".txt", "0", d.PreID, d.QuickID)
 	assert.Nil(t, err)
 	ok, err := resp.Ok()
 	assert.Nil(t, err)
