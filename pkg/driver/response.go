@@ -106,6 +106,7 @@ type FileInfo struct {
 	CreateTime StringInt64 `json:"tp"`
 	UpdateTime string      `json:"t"`
 }
+
 type LabelInfo struct {
 	ID    string `json:"id"`
 	Name  string `json:"name"`
@@ -116,6 +117,7 @@ type LabelInfo struct {
 	CreateTime int64 `json:"create_time"`
 	UpdateTime int64 `json:"update_time"`
 }
+
 type UploadInfoResp struct {
 	BasicResp
 	UploadMetaInfo
@@ -173,6 +175,7 @@ func (r *UploadInitResp) Err(respBody ...string) error {
 	return GetErr(r.ErrorCode, r.ErrorMsg)
 }
 
+// Ok if fastupload is successful will return true, otherwise return false
 func (r *UploadInitResp) Ok() (bool, error) {
 	switch r.Status {
 	case 2:
@@ -184,7 +187,7 @@ func (r *UploadInitResp) Ok() (bool, error) {
 	}
 }
 
-type UploadOssTokenResponse struct {
+type UploadOssTokenResp struct {
 	AccessKeyID     string    `json:"AccessKeyId"`
 	AccessKeySecret string    `json:"AccessKeySecret"`
 	Expiration      time.Time `json:"Expiration"`
@@ -192,7 +195,7 @@ type UploadOssTokenResponse struct {
 	StatusCode      string    `json:"StatusCode"`
 }
 
-func (r *UploadOssTokenResponse) Err(respBody ...string) error {
+func (r *UploadOssTokenResp) Err(respBody ...string) error {
 	if r.StatusCode == "200" {
 		return nil
 	}
@@ -200,4 +203,9 @@ func (r *UploadOssTokenResponse) Err(respBody ...string) error {
 		return errors.Wrap(ErrUnexpected, respBody[0])
 	}
 	return ErrUnexpected
+}
+
+type DownloadReap struct {
+	BasicResp
+	EncodedData string `json:"data,omitempty"`
 }

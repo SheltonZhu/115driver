@@ -37,4 +37,5 @@ type Label struct {
 	Name  string
 	Color LabelColor
 }
+
 type LabelColor int

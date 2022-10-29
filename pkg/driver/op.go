@@ -4,6 +4,7 @@ import (
 	"fmt"
 )
 
+// Delete delete files or directory from file ids
 func (c *Pan115Client) Delete(fileIDs ...string) error {
 	if len(fileIDs) == 0 {
 		return nil
@@ -23,6 +24,7 @@ func (c *Pan115Client) Delete(fileIDs ...string) error {
 	return CheckErr(err, &result, resp)
 }
 
+// Rename rename a file or directory with file id and name
 func (c *Pan115Client) Rename(fileID, newName string) error {
 	form := map[string]string{
 		"fid":       fileID,
@@ -39,6 +41,7 @@ func (c *Pan115Client) Rename(fileID, newName string) error {
 	return CheckErr(err, &result, resp)
 }
 
+// Move move files or directory into another directory with directroy id
 func (c *Pan115Client) Move(dirID string, fileIDs ...string) error {
 	if len(fileIDs) == 0 {
 		return nil
@@ -59,6 +62,7 @@ func (c *Pan115Client) Move(dirID string, fileIDs ...string) error {
 	return CheckErr(err, &result, resp)
 }
 
+// Copy files or directory into another directory with directroy id
 func (c *Pan115Client) Copy(dirID string, fileIDs ...string) error {
 	if len(fileIDs) == 0 {
 		return nil

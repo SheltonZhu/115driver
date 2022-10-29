@@ -21,4 +21,6 @@ const (
 const (
 	OssRegionId = "oss-cn-shenzhen"
 	OssEndpoint = "oss-cn-shenzhen.aliyuncs.com"
+
+	OssUserAgent = "aliyun-sdk-android/2.9.1"
 )

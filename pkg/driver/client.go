@@ -6,6 +6,7 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
+// Pan115Client driver client
 type Pan115Client struct {
 	Client         *resty.Client
 	Request        *resty.Request

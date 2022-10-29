@@ -6,9 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"io"
-	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
@@ -18,6 +16,40 @@ import (
 	"github.com/orzogc/fake115uploader/cipher"
 )
 
+// GetDigestResult get digest of file or stream
+func (c *Pan115Client) GetDigestResult(r io.Reader) (*hash.DigestResult, error) {
+	d := hash.DigestResult{}
+	return &d, hash.Digest(r, &d)
+}
+
+// GetUploadInfo get some info for upload
+func (c *Pan115Client) GetUploadInfo() error {
+	result := UploadInfoResp{}
+	req := c.NewRequest().
+		ForceContentType("application/json;charset=UTF-8").
+		SetResult(&result)
+	resp, err := req.Post(ApiUploadInfo)
+	if err = CheckErr(err, &result, resp); err != nil {
+		return err
+	}
+	c.Userkey = result.Userkey
+	c.UserID = result.UserID
+	c.UploadMetaInfo = &result.UploadMetaInfo
+	return nil
+}
+
+// UploadAvailable check and prepare to upload
+func (c *Pan115Client) UploadAvailable() (bool, error) {
+	if c.UserID != 0 && len(c.Userkey) > 0 {
+		return true, nil
+	}
+	if err := c.GetUploadInfo(); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+// UploadFastOrByOss check sha1 then upload
 func (c *Pan115Client) UploadFastOrByOss(dirID, fileName string, fileSize int64, r io.ReadSeeker) error {
 	var (
 		err      error
@@ -35,7 +67,7 @@ func (c *Pan115Client) UploadFastOrByOss(dirID, fileName string, fileSize int64,
 		return err
 	}
 	// 闪传
-	if fastInfo, err = c.UploadSH1(
+	if fastInfo, err = c.UploadSHA1(
 		digest.Size, fileName, dirID, digest.PreId, digest.QuickId,
 	); err != nil {
 		return err
@@ -52,6 +84,7 @@ func (c *Pan115Client) UploadFastOrByOss(dirID, fileName string, fileSize int64,
 	return c.UploadByOss(&fastInfo.UploadOssParams, r, dirID)
 }
 
+// UploadByOss use aliyun sdk to upload
 func (c *Pan115Client) UploadByOss(params *UploadOssParams, r io.Reader, dirID string) error {
 	ossToken, err := c.GetOssToken()
 	if err != nil {
@@ -67,24 +100,23 @@ func (c *Pan115Client) UploadByOss(params *UploadOssParams, r io.Reader, dirID s
 	}
 
 	options := []oss.Option{
-		oss.SetHeader("x-oss-security-token", ossToken.SecurityToken),
+		oss.SetHeader("X-OSS-Security-Token", ossToken.SecurityToken),
 		oss.Callback(base64.StdEncoding.EncodeToString([]byte(params.Callback.Callback))),
 		oss.CallbackVar(base64.StdEncoding.EncodeToString([]byte(params.Callback.CallbackVar))),
-		oss.UserAgentHeader("aliyun-sdk-android/2.9.1"),
-		// oss.Progress(&OssProgressListener{}),
+		oss.UserAgentHeader(OssUserAgent),
 	}
 
 	if err = bucket.PutObject(params.Object, r, options...); err != nil {
 		return err
 	}
 
-	// time.Sleep(time.Second)
 	// 验证上传是否成功
 	req := c.NewRequest().ForceContentType("application/json;charset=UTF-8")
 	opts := []GetFileOptions{
 		WithOrder(FileOrderByTime),
 		WithShowDirEnable(false),
-		WithLimit(20),
+		WithAsc(false),
+		WithLimit(500),
 	}
 	fResp, err := GetFiles(req, dirID, opts...)
 	if err != nil {
@@ -98,39 +130,9 @@ func (c *Pan115Client) UploadByOss(params *UploadOssParams, r io.Reader, dirID s
 	return ErrUploadFailed
 }
 
-type UploadTicket struct {
-	// Request method
-	Verb string
-	// Remote URL which will receive the file content.
-	Url string
-	// Request header
-	Header map[string]string
-}
-
-func (c *Pan115Client) GetUploadTicket(params *UploadOssParams, mimeType string, fileSize int64) (*UploadTicket, error) {
-	ossToken, err := c.GetOssToken()
-	if err != nil {
-		return nil, err
-	}
-	header := map[string]string{
-		"Content-Length":       strconv.FormatInt(fileSize, 10),
-		"Content-Type":         mimeType,
-		"X-OSS-Callback":       base64.StdEncoding.EncodeToString([]byte(params.Callback.Callback)),
-		"X-OSS-Callback-Var":   base64.StdEncoding.EncodeToString([]byte(params.Callback.CallbackVar)),
-		"X-OSS-Security-Token": ossToken.SecurityToken,
-		"Authorization":        "", // todo
-		"Date":                 Date(),
-	}
-	ticket := UploadTicket{
-		Verb:   http.MethodPut,
-		Url:    fmt.Sprintf("https://%s.%s/%s", params.Bucket, OssEndpoint, params.Object),
-		Header: header,
-	}
-	return &ticket, nil
-}
-
-func (c *Pan115Client) GetOssToken() (*UploadOssTokenResponse, error) {
-	result := UploadOssTokenResponse{}
+// GetOssToken get oss token for oss upload
+func (c *Pan115Client) GetOssToken() (*UploadOssTokenResp, error) {
+	result := UploadOssTokenResp{}
 	req := c.NewRequest().
 		ForceContentType("application/json;charset=UTF-8").
 		SetResult(&result)
@@ -139,7 +141,8 @@ func (c *Pan115Client) GetOssToken() (*UploadOssTokenResponse, error) {
 	return &result, CheckErr(err, &result, resp)
 }
 
-func (c *Pan115Client) UploadSH1(fileSize int64, fileName, dirID, preID, fileID string) (*UploadInitResp, error) {
+// UploadSHA1 upload a sha1 for upload
+func (c *Pan115Client) UploadSHA1(fileSize int64, fileName, dirID, preID, fileID string) (*UploadInitResp, error) {
 	var (
 		ecdhCipher   *cipher.EcdhCipher
 		encrypted    []byte
@@ -235,34 +238,4 @@ func (c *Pan115Client) GenerateToken(fileID, preID, timeStamp, fileSize string) 
 	userIdMd5 := md5.Sum([]byte(userID))
 	tokenMd5 := md5.Sum([]byte(md5Salt + fileID + fileSize + preID + userID + timeStamp + hex.EncodeToString(userIdMd5[:]) + appVer))
 	return hex.EncodeToString(tokenMd5[:])
-}
-
-func (c *Pan115Client) GetDigestResult(r io.Reader) (*hash.DigestResult, error) {
-	d := hash.DigestResult{}
-	return &d, hash.Digest(r, &d)
-}
-
-func (c *Pan115Client) GetUploadInfo() error {
-	result := UploadInfoResp{}
-	req := c.NewRequest().
-		ForceContentType("application/json;charset=UTF-8").
-		SetResult(&result)
-	resp, err := req.Post(ApiUploadInfo)
-	if err = CheckErr(err, &result, resp); err != nil {
-		return err
-	}
-	c.Userkey = result.Userkey
-	c.UserID = result.UserID
-	c.UploadMetaInfo = &result.UploadMetaInfo
-	return nil
-}
-
-func (c *Pan115Client) UploadAvailable() (bool, error) {
-	if c.UserID != 0 && len(c.Userkey) > 0 {
-		return true, nil
-	}
-	if err := c.GetUploadInfo(); err != nil {
-		return false, err
-	}
-	return true, nil
 }

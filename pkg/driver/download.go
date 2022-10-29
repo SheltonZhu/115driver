@@ -1,10 +1,13 @@
 package driver
 
 import (
+	"bytes"
 	"encoding/json"
+	"io"
 	"net/http"
 
 	crypto "github.com/gaoyb7/115drive-webdav/115"
+	"github.com/go-resty/resty/v2"
 )
 
 type FileDownloadUrl struct {
@@ -20,13 +23,21 @@ type DownloadInfo struct {
 	Url      FileDownloadUrl `json:"url"`
 	Header   http.Header
 }
-type DownloadData map[string]*DownloadInfo
 
-type DownloadReap struct {
-	BasicResp
-	EncodedData string `json:"data,omitempty"`
+// Get Download file from download info url
+func (info *DownloadInfo) Get() (io.ReadSeeker, error) {
+	req := resty.New().R().SetHeaderMultiValues(info.Header)
+	resp, err := req.Get(info.Url.Url)
+	if err != nil {
+		return nil, err
+	}
+
+	return bytes.NewReader(resp.Body()), nil
 }
 
+type DownloadData map[string]*DownloadInfo
+
+// Download get download info with pickcode
 func (c *Pan115Client) Download(pickCode string) (*DownloadInfo, error) {
 	key := crypto.GenerateKey()
 

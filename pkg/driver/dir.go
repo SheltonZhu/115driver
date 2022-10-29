@@ -1,11 +1,10 @@
 package driver
 
 import (
-	"strconv"
-
 	"github.com/go-resty/resty/v2"
 )
 
+// Mkdir make a new directory which name and parent directory id
 func (c *Pan115Client) Mkdir(parentID string, name string) (string, error) {
 	result := MkdirResp{}
 	form := map[string]string{
@@ -26,71 +25,7 @@ func (c *Pan115Client) Mkdir(parentID string, name string) (string, error) {
 	return result.CategoryID, nil
 }
 
-const (
-	FileOrderByTime = "user_ptime"
-	FileOrderByType = "file_type"
-	FileOrderBySize = "file_size"
-	FileOrderByName = "file_name"
-
-	FileListLimit = int64(56)
-)
-
-type GetFileOption struct {
-	order    string
-	asc      string
-	pageSize int64
-	offset   int64
-	showDir  string
-}
-type GetFileOptions func(o *GetFileOption)
-
-func WithLimit(pageSize int64) GetFileOptions {
-	return func(o *GetFileOption) {
-		o.pageSize = pageSize
-	}
-}
-func WithOffset(offset int64) GetFileOptions {
-	return func(o *GetFileOption) {
-		o.offset = offset
-	}
-}
-func WithOrder(order string) GetFileOptions {
-	return func(o *GetFileOption) {
-		o.order = order
-	}
-}
-func WithShowDirEnable(e bool) GetFileOptions {
-	return func(o *GetFileOption) {
-		o.showDir = "0"
-		if e {
-			o.showDir = "1"
-		}
-	}
-}
-func (o *GetFileOption) GetOrder() string {
-	return o.order
-}
-func (o *GetFileOption) GetAsc() string {
-	return o.asc
-}
-func (o *GetFileOption) GetPageSize() string {
-	return strconv.FormatInt(o.pageSize, 10)
-}
-func (o *GetFileOption) GetOffset() string {
-	return strconv.FormatInt(o.offset, 10)
-}
-func (o *GetFileOption) GetshowDir() string {
-	return o.showDir
-}
-func DefaultGetFileOptions() *GetFileOption {
-	return &GetFileOption{
-		order:    FileOrderByName,
-		asc:      "1",
-		pageSize: int64(56),
-		offset:   int64(0),
-		showDir:  "1",
-	}
-}
+// List list files and directory with options
 func (c *Pan115Client) List(dirID string, opts ...GetFileOptions) (*[]File, error) {
 	var files []File
 	offset := int64(0)

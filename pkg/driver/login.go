@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// LoginCheck check login status
 func (c *Pan115Client) LoginCheck() error {
 	result := LoginResp{}
 	req := c.NewRequest().
@@ -18,6 +19,7 @@ func (c *Pan115Client) LoginCheck() error {
 	return CheckErr(err, &result, resp)
 }
 
+// ImportCredential import uid, cid, seid
 func (c *Pan115Client) ImportCredential(cr *Credential) *Pan115Client {
 	cookies := map[string]string{
 		CookieNameUid:  cr.UID,
@@ -67,6 +69,7 @@ type Credential struct {
 	SEID string
 }
 
+// FromCookie get uid, cid, seid from cookie string
 func (cr *Credential) FromCookie(cookie string) error {
 	items := strings.Split(cookie, ";")
 	if len(items) < 3 {
