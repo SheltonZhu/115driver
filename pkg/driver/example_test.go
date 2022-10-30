@@ -28,7 +28,9 @@ func ExamplePan115Client_Download() {
 		log.Fatalf("Get io reader error: %s", err)
 	}
 	f, _ := os.Create("test.mp4") // save to test.mp4
-	defer f.Close()
+	defer func() {
+		f.Close()
+	}()
 	_, err = f.ReadFrom(rs)
 	if err != nil {
 		log.Fatalf("Copy reader error: %s", err)

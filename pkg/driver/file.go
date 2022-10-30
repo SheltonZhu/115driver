@@ -38,9 +38,9 @@ func (f *File) from(fileInfo *FileInfo) *File {
 		f.FileID = fileInfo.FileID
 		f.ParentID = fileInfo.CategoryID
 		f.IsDirectory = false
-		t, err := time.Parse("2006-01-02 15:04", fileInfo.UpdateTime)
+		localTime, err := time.ParseInLocation("2006-01-02 15:04", fileInfo.UpdateTime, time.Local)
 		if err == nil {
-			f.UpdateTime = time.Unix(t.Unix(), 0)
+			f.UpdateTime = time.Unix(localTime.Unix(), 0)
 		}
 	} else {
 		f.FileID = fileInfo.CategoryID

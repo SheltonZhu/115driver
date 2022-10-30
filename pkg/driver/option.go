@@ -135,3 +135,15 @@ func DefaultGetFileOptions() *GetFileOption {
 		showDir:  "1",
 	}
 }
+
+type UploadMultipartOptions struct {
+	ThreadsNum int
+}
+
+type UploadMultipartOption func(o UploadMultipartOptions)
+
+func WithThreadsNum(n int) UploadMultipartOption {
+	return func(o UploadMultipartOptions) {
+		o.ThreadsNum = n
+	}
+}

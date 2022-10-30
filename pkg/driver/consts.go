@@ -22,5 +22,12 @@ const (
 	OSSRegionID = "oss-cn-shenzhen"
 	OSSEndpoint = "oss-cn-shenzhen.aliyuncs.com"
 
-	OSSUserAgent = "aliyun-sdk-android/2.9.1"
+	OSSUserAgent               = "aliyun-sdk-android/2.9.1"
+	OssSecurityTokenHeaderName = "X-OSS-Security-Token"
+)
+
+const (
+	KB = 1 << (10 * (iota + 1))
+	MB
+	GB
 )
