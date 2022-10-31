@@ -3,6 +3,7 @@ package driver
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/go-resty/resty/v2"
 )
@@ -137,13 +138,35 @@ func DefaultGetFileOptions() *GetFileOption {
 }
 
 type UploadMultipartOptions struct {
-	ThreadsNum int
+	ThreadsNum       int
+	Timeout          time.Duration
+	TokenRefreshTime time.Duration
 }
 
-type UploadMultipartOption func(o UploadMultipartOptions)
+func DefalutUploadMultipartOptions() *UploadMultipartOptions {
+	return &UploadMultipartOptions{
+		ThreadsNum:       10,
+		Timeout:          time.Hour * 24,
+		TokenRefreshTime: time.Minute * 50,
+	}
+}
 
-func WithThreadsNum(n int) UploadMultipartOption {
-	return func(o UploadMultipartOptions) {
+type UploadMultipartOption func(o *UploadMultipartOptions)
+
+func UploadMultipartWithThreadsNum(n int) UploadMultipartOption {
+	return func(o *UploadMultipartOptions) {
 		o.ThreadsNum = n
+	}
+}
+
+func UploadMultipartWithTimeout(timeout time.Duration) UploadMultipartOption {
+	return func(o *UploadMultipartOptions) {
+		o.Timeout = timeout
+	}
+}
+
+func UploadMultipartWithTokenRefreshTime(refreshTime time.Duration) UploadMultipartOption {
+	return func(o *UploadMultipartOptions) {
+		o.TokenRefreshTime = refreshTime
 	}
 }

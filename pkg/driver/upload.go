@@ -1,18 +1,20 @@
 package driver
 
 import (
+	"bytes"
 	"crypto/md5"
 	"crypto/sha1"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"io"
-	"log"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	hash "github.com/SheltonZhu/115driver/pkg/crypto"
@@ -294,7 +296,7 @@ func (c *Pan115Client) UploadByMultipart(params *UploadOSSParams, fileSize int64
 		err       error
 	)
 
-	options := UploadMultipartOptions{10}
+	options := DefalutUploadMultipartOptions()
 	if len(opts) > 0 {
 		for _, f := range opts {
 			f(options)
@@ -314,8 +316,10 @@ func (c *Pan115Client) UploadByMultipart(params *UploadOSSParams, fileSize int64
 	}
 
 	// ossToken一小时后就会失效，所以每50分钟重新获取一次
-	ticker := time.NewTicker(50 * time.Minute)
+	ticker := time.NewTicker(options.TokenRefreshTime)
 	defer ticker.Stop()
+	// 设置超时
+	timeout := time.NewTimer(options.Timeout)
 
 	if chunks, err = SplitFile(f.Name(), fileSize); err != nil {
 		return err
@@ -328,35 +332,79 @@ func (c *Pan115Client) UploadByMultipart(params *UploadOSSParams, fileSize int64
 		return err
 	}
 
-	for _, chunk := range chunks {
-		var part oss.UploadPart // 出现错误就继续尝试，共尝试3次
-		for retry := 0; retry < 3; retry++ {
-			select {
-			case <-ticker.C:
-				if ossToken, err = c.GetOSSToken(); err != nil { // 到时重新获取ossToken
-					log.Printf("刷新token时出现错误：%v", err)
-				}
-			default:
-			}
+	wg := sync.WaitGroup{}
+	wg.Add(len(chunks))
 
-			_, _ = f.Seek(chunk.Offset, io.SeekStart)
-			if part, err = bucket.UploadPart(imur, f, chunk.Size, chunk.Number, OssOption(params, ossToken)...); err == nil {
-				break
+	chunksCh := make(chan oss.FileChunk)
+	errCh := make(chan error)
+	UploadedPartsCh := make(chan oss.UploadPart)
+	quit := make(chan struct{})
+
+	// producter
+	go chunksProducer(chunksCh, chunks)
+	go func() {
+		wg.Wait()
+		quit <- struct{}{}
+	}()
+
+	// consumers
+	for i := 0; i < options.ThreadsNum; i++ {
+		go func(threadId int) {
+			defer func() {
+				if r := recover(); r != nil {
+					errCh <- fmt.Errorf("Recovered in %v", r)
+				}
+			}()
+			for chunk := range chunksCh {
+				var part oss.UploadPart // 出现错误就继续尝试，共尝试3次
+				for retry := 0; retry < 3; retry++ {
+					select {
+					case <-ticker.C:
+						if ossToken, err = c.GetOSSToken(); err != nil { // 到时重新获取ossToken
+							errCh <- errors.Wrap(err, "刷新token时出现错误")
+						}
+					default:
+					}
+
+					buf := make([]byte, chunk.Size)
+					if _, err = f.ReadAt(buf, chunk.Offset); err != nil && !errors.Is(err, io.EOF) {
+						continue
+					}
+
+					b := bytes.NewBuffer(buf)
+					if part, err = bucket.UploadPart(imur, b, chunk.Size, chunk.Number, OssOption(params, ossToken)...); err == nil {
+						continue
+					}
+				}
+				if err != nil {
+					errCh <- errors.Wrap(err, fmt.Sprintf("上传 %s 的第%d个分片时出现错误：%v", f.Name(), chunk.Number, err))
+				}
+				UploadedPartsCh <- part
 			}
-		}
-		if err != nil {
-			log.Printf("上传 %s 的第%d个分片时出现错误：%v", f.Name(), chunk.Number, err)
-		}
-		parts = append(parts, part)
+		}(i)
 	}
 
-	select {
-	case <-ticker.C:
-		// 到时重新获取ossToken
-		if ossToken, err = c.GetOSSToken(); err != nil {
-			return err
+	go func() {
+		for part := range UploadedPartsCh {
+			parts = append(parts, part)
+			wg.Done()
 		}
-	default:
+	}()
+LOOP:
+	for {
+		select {
+		case <-ticker.C:
+			// 到时重新获取ossToken
+			if ossToken, err = c.GetOSSToken(); err != nil {
+				return err
+			}
+		case <-quit:
+			break LOOP
+		case <-errCh:
+			return err
+		case <-timeout.C:
+			return fmt.Errorf("time out")
+		}
 	}
 
 	// EOF错误是xml的Unmarshal导致的，响应其实是json格式，所以实际上上传是成功的
@@ -367,6 +415,12 @@ func (c *Pan115Client) UploadByMultipart(params *UploadOSSParams, fileSize int64
 		}
 	}
 	return c.checkUploadStatus(dirID, params.SHA1)
+}
+
+func chunksProducer(ch chan oss.FileChunk, chunks []oss.FileChunk) {
+	for _, chunk := range chunks {
+		ch <- chunk
+	}
 }
 
 // SplitFile pplitFile

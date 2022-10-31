@@ -3,6 +3,7 @@ package driver
 import (
 	"io"
 	"math/rand"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -153,4 +154,32 @@ func TestUpload(t *testing.T) {
 	randStr := NowMilli().String()
 	r := strings.NewReader(randStr)
 	assert.Nil(t, client.UploadFastOrByOSS("0", randStr+".txt", r.Size(), r))
+}
+
+func TestUploadMultpart(t *testing.T) {
+	start := time.Now()
+
+	down := teardown(t)
+	defer down(t)
+
+	f, err := os.CreateTemp("./", "test-temp-*")
+	assert.Nil(t, err)
+
+	randStr := NowMilli().String()
+	_, err = f.WriteString(randStr)
+	assert.Nil(t, err)
+
+	_, err = f.Seek(0, io.SeekStart)
+	assert.Nil(t, err)
+
+	defer func() {
+		f.Close()
+		os.Remove(f.Name())
+	}()
+
+	fs, _ := f.Stat()
+	err = client.UploadFastOrByMultipart("0", randStr+".txt", fs.Size(), f)
+	assert.Nil(t, err)
+	elapsedTime := time.Since(start) / time.Millisecond // duration in ms
+	t.Logf("Segment finished in %dms", elapsedTime)
 }
