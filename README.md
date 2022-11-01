@@ -35,7 +35,7 @@ More examples can be found in [reference](https://pkg.go.dev/github.com/SheltonZ
 * Login
   * [X] Import credential from cookies
   * [ ] Login via QRCode
-  * [ ] Get signed-in user information
+  * [X] Get signed-in user information
 * File
   * [X] List
   * [X] Rename
@@ -43,12 +43,12 @@ More examples can be found in [reference](https://pkg.go.dev/github.com/SheltonZ
   * [X] Copy
   * [X] Delete
   * [X] Make Directory
-  * [x] Download
-  * [x] Upload SHA1
-  * [x] Upload
+  * [X] Download
+  * [X] Upload SHA1
+  * [X] Upload
   * [ ] Search
-  * [ ] Get Information by ID
-  * [ ] Stat File
+  * [X] Get Information by ID
+  * [X] Stat File
 
 ## License
 

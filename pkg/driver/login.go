@@ -94,3 +94,13 @@ func (cr *Credential) FromCookie(cookie string) error {
 	}
 	return nil
 }
+
+// GetUser get user information
+func (c *Pan115Client) GetUser() (*UserInfo, error) {
+	result := UserInfoResp{}
+	req := c.NewRequest().
+		SetQueryParam("_", Now().String()).
+		SetResult(&result)
+	resp, err := req.Get(ApiUserInfo)
+	return &result.UserInfo, CheckErr(err, &result, resp)
+}

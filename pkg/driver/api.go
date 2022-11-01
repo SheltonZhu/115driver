@@ -3,6 +3,7 @@ package driver
 const (
 	// login
 	ApiLoginCheck = "https://passportapi.115.com/app/1.0/web/1.0/check/sso"
+	ApiUserInfo   = "https://my.115.com/?ct=ajax&ac=nav"
 
 	// dir
 	ApiDirAdd = "https://webapi.115.com/files/add"
@@ -15,6 +16,9 @@ const (
 
 	ApiFileList       = "https://webapi.115.com/files"
 	ApiFileListByName = "https://aps.115.com/natsort/files.php"
+
+	ApiFileStat = "https://webapi.115.com/category/get"
+	ApiFileInfo = "https://webapi.115.com/files/get_info"
 
 	// download
 	ApiDownloadGetUrl = "https://proapi.115.com/app/chrome/downurl"

@@ -209,3 +209,53 @@ type DownloadReap struct {
 	BasicResp
 	EncodedData string `json:"data,omitempty"`
 }
+
+type UserInfoResp struct {
+	BasicResp
+	UserInfo UserInfo `json:"data"`
+}
+type UserInfo struct {
+	Device      int           `json:"device"`
+	Rank        int           `json:"rank"`
+	Liang       int           `json:"liang"`
+	Mark        int           `json:"mark"`
+	Mark1       int           `json:"mark1"`
+	Vip         int           `json:"vip"`
+	Expire      int           `json:"expire"`
+	Global      int           `json:"global"`
+	Forever     int           `json:"forever"`
+	IsPrivilege bool          `json:"is_privilege"`
+	Privilege   []interface{} `json:"privilege"`
+	UserName    string        `json:"user_name"`
+	Face        string        `json:"face"`
+	UserID      int64         `json:"user_id"`
+}
+
+type FileStatResponse struct {
+	FileCount   StringInt         `json:"count"`
+	Size        string            `json:"size"`
+	FolderCount StringInt         `json:"folder_count"`
+	CreateTime  StringInt64       `json:"ptime"`
+	UpdateTime  StringInt64       `json:"utime"`
+	IsShare     StringInt         `json:"is_share"`
+	FileName    string            `json:"file_name"`
+	PickCode    string            `json:"pick_code"`
+	Sha1        string            `json:"sha1"`
+	IsMark      StringInt         `json:"is_mark"`
+	OpenTime    int               `json:"open_time"`
+	IsFile      StringInt         `json:"file_category"`
+	Paths       []*FileParentInfo `json:"paths"`
+}
+type FileParentInfo struct {
+	FileID   int    `json:"file_id"`
+	FileName string `json:"file_name"`
+}
+
+func (r *FileStatResponse) Err(respBody ...string) error {
+	return nil
+}
+
+type GetFileInfoResponse struct {
+	BasicResp
+	Files []*FileInfo `json:"data"`
+}

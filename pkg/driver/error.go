@@ -88,6 +88,7 @@ var (
 		// QRCode errors
 		40199002: ErrQrcodeExpired,
 		// Params errors
+		1001:   ErrWrongParams,
 		200900: ErrWrongParams,
 		990002: ErrWrongParams,
 		//PickCode

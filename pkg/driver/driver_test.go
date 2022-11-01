@@ -183,3 +183,27 @@ func TestUploadMultpart(t *testing.T) {
 	elapsedTime := time.Since(start) / time.Millisecond // duration in ms
 	t.Logf("Segment finished in %dms", elapsedTime)
 }
+
+func TestGetUser(t *testing.T) {
+	down := teardown(t)
+	defer down(t)
+
+	_, err := client.GetUser()
+	assert.Nil(t, err)
+}
+
+func TestStat(t *testing.T) {
+	down := teardown(t)
+	defer down(t)
+
+	_, err := client.Stat("fileID")
+	assert.Error(t, err)
+}
+
+func TestGet(t *testing.T) {
+	down := teardown(t)
+	defer down(t)
+
+	_, err := client.GetFile("2491635336026092299")
+	assert.Error(t, err)
+}
