@@ -1,6 +1,6 @@
 # 115driver
 
-![Version](https://img.shields.io/badge/release-v1.0.9-brightgreen?style=flat-square) [![Reference](https://img.shields.io/badge/Go-Reference-blue.svg?style=flat-square)](https://pkg.go.dev/github.com/SheltonZhu/115driver) ![License](https://img.shields.io/:License-MIT-green.svg?style=flat-square)
+![Version](https://img.shields.io/badge/release-v1.0.10-brightgreen?style=flat-square) [![Reference](https://img.shields.io/badge/Go-Reference-blue.svg?style=flat-square)](https://pkg.go.dev/github.com/SheltonZhu/115driver) ![License](https://img.shields.io/:License-MIT-green.svg?style=flat-square)
 
 ## Example
 
@@ -34,7 +34,7 @@ More examples can be found in [reference](https://pkg.go.dev/github.com/SheltonZ
 
 * Login
   * [X] Import credential from cookies
-  * [ ] Login via QRCode
+  * [x] Login via QRCode
   * [X] Get signed-in user information
 * File
   * [X] List

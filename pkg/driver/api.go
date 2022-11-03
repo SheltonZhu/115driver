@@ -29,4 +29,9 @@ const (
 
 	// oss
 	ApiUploadOSSToken = "https://uplb.115.com/3.0/gettoken.php"
+
+	// qrcode
+	ApiQrcodeToken  = "https://qrcodeapi.115.com/api/1.0/web/1.0/token"
+	ApiQrcodeStatus = "https://qrcodeapi.115.com/get/status/"
+	ApiQrcodeLogin  = "https://passportapi.115.com/app/1.0/web/1.0/login/qrcode"
 )

@@ -242,7 +242,7 @@ type FileStatResponse struct {
 	PickCode    string            `json:"pick_code"`
 	Sha1        string            `json:"sha1"`
 	IsMark      StringInt         `json:"is_mark"`
-	OpenTime    int               `json:"open_time"`
+	OpenTime    int64             `json:"open_time"`
 	IsFile      StringInt         `json:"file_category"`
 	Paths       []*FileParentInfo `json:"paths"`
 }
@@ -258,4 +258,57 @@ func (r *FileStatResponse) Err(respBody ...string) error {
 type GetFileInfoResponse struct {
 	BasicResp
 	Files []*FileInfo `json:"data"`
+}
+
+type QRCodeBasicResp struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	State   int    `json:"state"`
+	Errno   int    `json:"errno"`
+	Error   string `json:"error"`
+}
+
+func (resp *QRCodeBasicResp) Err(respBody ...string) error {
+	if resp.State == 1 {
+		return nil
+	}
+	if len(respBody) > 0 {
+		return GetErr(resp.Code, respBody[0])
+	}
+	return GetErr(resp.Code)
+}
+
+type QRCodeTokenResp struct {
+	QRCodeBasicResp
+	Data QRCodeSession `json:"data"`
+}
+
+type QRCodeLoginResp struct {
+	QRCodeBasicResp
+	Data struct {
+		Alert      string     `json:"alert"`
+		BindMobile int        `json:"bind_mobile"`
+		Credential Credential `json:"cookie"`
+		Country    string     `json:"country"`
+		Email      string     `json:"email"`
+		Face       struct {
+			FaceL string `json:"face_l"`
+			FaceM string `json:"face_m"`
+			FaceS string `json:"face_s"`
+		} `json:"face"`
+		From          string      `json:"from"`
+		IsChangPasswd int         `json:"is_chang_passwd"`
+		IsFirstLogin  int         `json:"is_first_login"`
+		IsTrusted     interface{} `json:"is_trusted"`
+		IsVip         int         `json:"is_vip"`
+		Mark          int         `json:"mark"`
+		Mobile        string      `json:"mobile"`
+		UserID        int         `json:"user_id"`
+		UserName      string      `json:"user_name"`
+	} `json:"data"`
+}
+
+type QRCodeStatusResp struct {
+	QRCodeLoginResp
+	Data QRCodeStatus `json:"data"`
 }

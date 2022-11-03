@@ -64,9 +64,9 @@ func (c *Pan115Client) importCookies(cookies map[string]string, domain string, p
 }
 
 type Credential struct {
-	UID  string
-	CID  string
-	SEID string
+	UID  string `json:"UID"`
+	CID  string `json:"CID"`
+	SEID string `json:"SEID"`
 }
 
 // FromCookie get uid, cid, seid from cookie string

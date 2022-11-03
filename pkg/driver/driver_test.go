@@ -207,3 +207,31 @@ func TestGet(t *testing.T) {
 	_, err := client.GetFile("2491635336026092299")
 	assert.Error(t, err)
 }
+
+func TestQRCodeStart(t *testing.T) {
+	c := New(WithTrace(), WithDebug())
+	s, err := c.QRCodeStart()
+	assert.Nil(t, err)
+
+	f, _ := os.CreateTemp("./", "tmp-qrcode-*.png")
+	defer func() {
+		f.Close()
+		os.Remove(f.Name())
+	}()
+	b, err := s.QRCode()
+	assert.Nil(t, err)
+
+	_, err = f.Write(b)
+	assert.Nil(t, err)
+
+	status, err := c.QRCodeStatus(s)
+	assert.Nil(t, err)
+
+	if status.IsAllowed() {
+		_, err = c.QRCodeLogin(s)
+		assert.Nil(t, err)
+	} else {
+		_, err = c.QRCodeLogin(s)
+		assert.Error(t, err)
+	}
+}

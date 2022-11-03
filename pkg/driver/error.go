@@ -56,6 +56,8 @@ var (
 
 	ErrRepeatLogin = errors.New("repeat login")
 
+	ErrFailedToLogin = errors.New("failed to login")
+
 	ErrPickCodeNotExist = errors.New("pickcode does not exist")
 
 	ErrPickCodeisEmpty = errors.New("empty pickcode")
@@ -81,6 +83,8 @@ var (
 		// Login errors
 		40101009: ErrPasswordIncorrect,
 		40101010: ErrLoginTwoStepVerify,
+		40101017: ErrFailedToLogin,
+		40100000: ErrWrongParams,
 		40101030: ErrAccountNotBindMobile,
 		40101032: ErrCredentialInvalid,
 		40101037: ErrSessionExited,

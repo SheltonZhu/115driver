@@ -220,9 +220,11 @@ func (c *Pan115Client) UploadSHA1(fileSize int64, fileName, dirID, preID, fileID
 	if decrypted, err = ecdhCipher.Decrypt(bodyBytes); err != nil {
 		return nil, err
 	}
-	err = CheckErr(json.Unmarshal(decrypted, &result), &result, resp)
+	if err = CheckErr(json.Unmarshal(decrypted, &result), &result, resp); err != nil {
+		return nil, err
+	}
 	result.SHA1 = fileID
-	return &result, err
+	return &result, nil
 }
 
 const (
