@@ -1,6 +1,9 @@
 package driver
 
 import (
+	"strconv"
+	"strings"
+
 	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
 )
@@ -58,6 +61,8 @@ var (
 
 	ErrFailedToLogin = errors.New("failed to login")
 
+	ErrDoesLoggedOut = errors.New("you have been kicked out by multi-device login management")
+
 	ErrPickCodeNotExist = errors.New("pickcode does not exist")
 
 	ErrPickCodeisEmpty = errors.New("empty pickcode")
@@ -87,8 +92,10 @@ var (
 		40100000: ErrWrongParams,
 		40101030: ErrAccountNotBindMobile,
 		40101032: ErrCredentialInvalid,
+		40101035: ErrDoesLoggedOut,
 		40101037: ErrSessionExited,
 		40101038: ErrRepeatLogin,
+
 		// QRCode errors
 		40199002: ErrQrcodeExpired,
 		// Params errors
@@ -108,8 +115,14 @@ func GetErr(code int, respBody ...string) error {
 	if err, found := errMap[code]; found {
 		errWithMsg = err
 	}
-	if len(respBody) > 0 && errors.Is(ErrUnexpected, errWithMsg) {
-		return errors.Wrap(errWithMsg, respBody[0])
+	// if len(respBody) > 0 && errors.Is(ErrUnexpected, errWithMsg) {
+	if len(respBody) > 0 {
+		bodyRaw := respBody[0]
+		readableBody, err := strconv.Unquote(strings.Replace(strconv.Quote(bodyRaw), `\\u`, `\u`, -1))
+		if err != nil {
+			return errors.Wrap(errWithMsg, bodyRaw)
+		}
+		return errors.Wrap(errWithMsg, readableBody)
 	}
 	return errWithMsg
 }

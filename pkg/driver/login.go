@@ -15,8 +15,11 @@ func (c *Pan115Client) LoginCheck() error {
 		SetQueryParam("_", NowMilli().String()).
 		SetResult(&result)
 	resp, err := req.Get(ApiLoginCheck)
+	if err = CheckErr(err, &result, resp); err != nil {
+		return err
+	}
 	c.UserID = result.Data.UserID
-	return CheckErr(err, &result, resp)
+	return nil
 }
 
 // ImportCredential import uid, cid, seid

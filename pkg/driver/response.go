@@ -2,8 +2,6 @@ package driver
 
 import (
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 type LoginResp struct {
@@ -200,7 +198,7 @@ func (r *UploadOSSTokenResp) Err(respBody ...string) error {
 		return nil
 	}
 	if len(respBody) > 0 {
-		return errors.Wrap(ErrUnexpected, respBody[0])
+		return GetErr(0, respBody[0])
 	}
 	return ErrUnexpected
 }
@@ -309,6 +307,6 @@ type QRCodeLoginResp struct {
 }
 
 type QRCodeStatusResp struct {
-	QRCodeLoginResp
+	QRCodeBasicResp
 	Data QRCodeStatus `json:"data"`
 }
