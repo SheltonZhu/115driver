@@ -8,8 +8,7 @@ const (
 )
 
 const (
-	CookieDomain115   = ".115.com"
-	CookieDomainAnxia = ".anxia.com"
+	CookieDomain115 = ".115.com"
 
 	CookieUrl = "https://115.com"
 

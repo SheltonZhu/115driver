@@ -29,7 +29,7 @@ func (c *Pan115Client) ImportCredential(cr *Credential) *Pan115Client {
 		CookieNameCid:  cr.CID,
 		CookieNameSeid: cr.SEID,
 	}
-	c.ImportCookies(cookies, CookieDomain115, CookieDomainAnxia)
+	c.ImportCookies(cookies, CookieDomain115)
 	return c
 }
 
