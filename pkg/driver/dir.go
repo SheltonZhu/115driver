@@ -25,12 +25,12 @@ func (c *Pan115Client) Mkdir(parentID string, name string) (string, error) {
 	return result.CategoryID, nil
 }
 
-// List list files and directory with options
+// List list all files and directories
 func (c *Pan115Client) List(dirID string) (*[]File, error) {
 	var files []File
 	offset := int64(0)
-	req := c.NewRequest().ForceContentType("application/json;charset=UTF-8")
 	for {
+		req := c.NewRequest().ForceContentType("application/json;charset=UTF-8")
 		result, err := GetFiles(req, dirID, WithLimit(FileListLimit), WithOffset(offset))
 		if err != nil {
 			return nil, err
