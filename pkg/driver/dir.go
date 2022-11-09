@@ -46,6 +46,23 @@ func (c *Pan115Client) List(dirID string) (*[]File, error) {
 	return &files, nil
 }
 
+// List list all files and directories with offset and limit
+func (c *Pan115Client) ListPage(dirID string, offset, limit int) (*[]File, error) {
+	var files []File
+	req := c.NewRequest().ForceContentType("application/json;charset=UTF-8")
+	result, err := GetFiles(req, dirID, WithLimit(int64(limit)), WithOffset(int64(offset)))
+	if err != nil {
+		return nil, err
+	}
+	if result.Count <= offset {
+		return &files, nil
+	}
+	for _, fileInfo := range result.Files {
+		files = append(files, *(&File{}).from(&fileInfo))
+	}
+	return &files, nil
+}
+
 func GetFiles(req *resty.Request, dirID string, opts ...GetFileOptions) (*FileListResp, error) {
 	o := DefaultGetFileOptions()
 	if len(opts) > 0 {
