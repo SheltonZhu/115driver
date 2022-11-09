@@ -92,6 +92,15 @@ func TestList(t *testing.T) {
 	assert.Empty(t, *f)
 }
 
+func TestListPage(t *testing.T) {
+	down := teardown(t)
+	defer down(t)
+
+	f, err := client.ListPage("0", 0, 5)
+	assert.NotEmpty(t, *f)
+	assert.Nil(t, err)
+}
+
 func TestDownload(t *testing.T) {
 	down := teardown(t)
 	defer down(t)
