@@ -53,6 +53,10 @@ var (
 
 	ErrDownloadFileTooBig = errors.New("target file is too big to download")
 
+	ErrCyclicCopy = errors.New("cyclic copy")
+
+	ErrCyclicMove = errors.New("cyclic move")
+
 	ErrVideoNotReady = errors.New("video is not ready")
 
 	ErrWrongParams = errors.New("wrong parameters")
@@ -85,6 +89,8 @@ var (
 		50028:    ErrDownloadFileTooBig,
 		70005:    ErrDownloadFileNotExistOrHasDeleted,
 		231011:   ErrDownloadFileNotExistOrHasDeleted,
+		91002:    ErrCyclicCopy,
+		800006:   ErrCyclicMove,
 		// Login errors
 		40101009: ErrPasswordIncorrect,
 		40101010: ErrLoginTwoStepVerify,
