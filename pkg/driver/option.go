@@ -129,7 +129,7 @@ func (o *GetFileOption) GetshowDir() string {
 
 func DefaultGetFileOptions() *GetFileOption {
 	return &GetFileOption{
-		order:    FileOrderByName,
+		order:    FileOrderByTime,
 		asc:      "1",
 		pageSize: int64(56),
 		offset:   int64(0),
