@@ -80,7 +80,7 @@ func GetFiles(req *resty.Request, dirID string, opts ...GetFileOptions) (*FileLi
 		"show_dir":         o.GetshowDir(),
 		"limit":            o.GetPageSize(),
 		"snap":             "0",
-		"natsort":          "1",
+		"natsort":          "0",
 		"record_open_time": "1",
 		"format":           "json",
 		"fc_mix":           "0",
