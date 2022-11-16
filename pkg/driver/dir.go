@@ -87,7 +87,7 @@ func GetFiles(req *resty.Request, dirID string, opts ...GetFileOptions) (*FileLi
 	}
 	req = req.SetQueryParams(params).
 		SetResult(&result)
-	resp, err := req.Get(ApiFileListByName)
+	resp, err := req.Get(ApiFileList)
 	if err = CheckErr(err, &result, resp); err != nil {
 		return &FileListResp{}, err
 	}
