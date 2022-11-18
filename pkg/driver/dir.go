@@ -27,18 +27,23 @@ func (c *Pan115Client) Mkdir(parentID string, name string) (string, error) {
 
 // List list all files and directories
 func (c *Pan115Client) List(dirID string) (*[]File, error) {
+	return c.ListWithLimit(dirID, FileListLimit)
+}
+
+// List list all files and directories with limit
+func (c *Pan115Client) ListWithLimit(dirID string, limit int64) (*[]File, error) {
 	var files []File
 	offset := int64(0)
 	for {
 		req := c.NewRequest().ForceContentType("application/json;charset=UTF-8")
-		result, err := GetFiles(req, dirID, WithLimit(FileListLimit), WithOffset(offset))
+		result, err := GetFiles(req, dirID, WithLimit(limit), WithOffset(offset))
 		if err != nil {
 			return nil, err
 		}
 		for _, fileInfo := range result.Files {
 			files = append(files, *(&File{}).from(&fileInfo))
 		}
-		offset = int64(result.Offset) + FileListLimit
+		offset = int64(result.Offset) + limit
 		if offset >= int64(result.Count) {
 			break
 		}
@@ -47,14 +52,14 @@ func (c *Pan115Client) List(dirID string) (*[]File, error) {
 }
 
 // List list all files and directories with offset and limit
-func (c *Pan115Client) ListPage(dirID string, offset, limit int) (*[]File, error) {
+func (c *Pan115Client) ListPage(dirID string, offset, limit int64) (*[]File, error) {
 	var files []File
 	req := c.NewRequest().ForceContentType("application/json;charset=UTF-8")
-	result, err := GetFiles(req, dirID, WithLimit(int64(limit)), WithOffset(int64(offset)))
+	result, err := GetFiles(req, dirID, WithLimit(limit), WithOffset(offset))
 	if err != nil {
 		return nil, err
 	}
-	if result.Count <= offset {
+	if int64(result.Count) <= offset {
 		return &files, nil
 	}
 	for _, fileInfo := range result.Files {
