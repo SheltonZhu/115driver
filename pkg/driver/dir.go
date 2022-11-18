@@ -80,14 +80,14 @@ func GetFiles(req *resty.Request, dirID string, opts ...GetFileOptions) (*FileLi
 		"show_dir":         o.GetshowDir(),
 		"limit":            o.GetPageSize(),
 		"snap":             "0",
-		"natsort":          "1",
+		"natsort":          "0",
 		"record_open_time": "1",
 		"format":           "json",
 		"fc_mix":           "0",
 	}
 	req = req.SetQueryParams(params).
 		SetResult(&result)
-	resp, err := req.Get(ApiFileListByName)
+	resp, err := req.Get(ApiFileList)
 	if err = CheckErr(err, &result, resp); err != nil {
 		return &FileListResp{}, err
 	}
