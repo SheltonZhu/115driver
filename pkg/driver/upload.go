@@ -375,7 +375,7 @@ func (c *Pan115Client) UploadByMultipart(params *UploadOSSParams, fileSize int64
 
 					b := bytes.NewBuffer(buf)
 					if part, err = bucket.UploadPart(imur, b, chunk.Size, chunk.Number, OssOption(params, ossToken)...); err == nil {
-						continue
+						break
 					}
 				}
 				if err != nil {
