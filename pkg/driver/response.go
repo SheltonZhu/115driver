@@ -154,6 +154,10 @@ type UploadInitResp struct {
 	// Useless fields
 	FileID   int    `json:"fileid"`
 	FileInfo string `json:"fileinfo"`
+
+	// New fields in upload v4.0
+	SignKey   string `json:"sign_key"`
+	SignCheck string `json:"sign_check"`
 }
 
 type UploadOSSParams struct {
@@ -167,7 +171,7 @@ type UploadOSSParams struct {
 }
 
 func (r *UploadInitResp) Err(respBody ...string) error {
-	if r.ErrorCode == 0 {
+	if r.ErrorCode == 0 || r.ErrorCode == 701 {
 		return nil
 	}
 	return GetErr(r.ErrorCode, r.ErrorMsg)

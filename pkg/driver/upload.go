@@ -75,7 +75,7 @@ func (c *Pan115Client) UploadFastOrByOSS(dirID, fileName string, fileSize int64,
 	}
 	// 闪传
 	if fastInfo, err = c.UploadSHA1(
-		digest.Size, fileName, dirID, digest.PreID, digest.QuickID,
+		digest.Size, fileName, dirID, digest.PreID, digest.QuickID, r,
 	); err != nil {
 		return err
 	}
@@ -146,7 +146,7 @@ func (c *Pan115Client) GetOSSToken() (*UploadOSSTokenResp, error) {
 }
 
 // UploadSHA1 upload a sha1 for upload
-func (c *Pan115Client) UploadSHA1(fileSize int64, fileName, dirID, preID, fileID string) (*UploadInitResp, error) {
+func (c *Pan115Client) UploadSHA1(fileSize int64, fileName, dirID, preID, fileID string, r io.ReadSeeker) (*UploadInitResp, error) {
 	var (
 		ecdhCipher   *cipher.EcdhCipher
 		encrypted    []byte
@@ -154,7 +154,6 @@ func (c *Pan115Client) UploadSHA1(fileSize int64, fileName, dirID, preID, fileID
 		encodedToken string
 		err          error
 		target       = "U_1_" + dirID
-		t            = Now()
 		bodyBytes    []byte
 		result       = UploadInitResp{}
 		fileSizeStr  = strconv.FormatInt(fileSize, 10)
@@ -167,82 +166,105 @@ func (c *Pan115Client) UploadSHA1(fileSize int64, fileName, dirID, preID, fileID
 		return nil, err
 	}
 
-	if encodedToken, err = ecdhCipher.EncodeToken(t.ToInt64()); err != nil {
-		return nil, err
-	}
-
-	params := map[string]string{
-		"isp":        strconv.FormatInt(c.UploadMetaInfo.IspType, 10),
-		"appid":      strconv.FormatInt(c.UploadMetaInfo.AppID, 10),
-		"t":          t.String(),
-		"token":      c.GenerateToken(fileID, preID, t.String(), fileSizeStr),
-		"appversion": appVer,
-		"format":     "json",
-		"sig":        c.GenerateSignature(fileID, target),
-		"k_ec":       encodedToken,
-	}
-
 	userID := strconv.FormatInt(c.UserID, 10)
 	form := url.Values{}
-	form.Set("preid", preID)
-	form.Set("filename", fileName)
-	form.Set("quickid", fileID)
-	form.Set("user_id", userID)
-	form.Set("app_ver", appVer)
-	form.Set("filesize", fileSizeStr)
+	form.Set("appid", "0")
+	form.Set("appversion", appVer)
 	form.Set("userid", userID)
-	form.Set("exif", "")
-	form.Set("target", target)
+	form.Set("filename", fileName)
+	form.Set("filesize", fileSizeStr)
 	form.Set("fileid", fileID)
+	form.Set("target", target)
+	form.Set("sig", c.GenerateSignature(fileID, target))
 
-	if encrypted, err = ecdhCipher.Encrypt([]byte(form.Encode())); err != nil {
-		return nil, err
+	signKey, signVal := "", ""
+	for retry := true; retry; {
+		t := Now()
+
+		if encodedToken, err = ecdhCipher.EncodeToken(t.ToInt64()); err != nil {
+			return nil, err
+		}
+
+		params := map[string]string{
+			"k_ec": encodedToken,
+		}
+
+		form.Set("t", t.String())
+		form.Set("token", c.GenerateToken(fileID, preID, t.String(), fileSizeStr, signKey, signVal))
+		if signKey != "" && signVal != "" {
+			form.Set("sign_key", signKey)
+			form.Set("sign_val", signVal)
+		}
+		if encrypted, err = ecdhCipher.Encrypt([]byte(form.Encode())); err != nil {
+			return nil, err
+		}
+
+		req := c.NewRequest().
+			SetQueryParams(params).
+			SetBody(encrypted).
+			SetHeaderVerbatim("Content-Type", "application/x-www-form-urlencoded").
+			SetDoNotParseResponse(true)
+		resp, err := req.Post(ApiUploadInit)
+		if err != nil {
+			return nil, err
+		}
+		data := resp.RawBody()
+		defer data.Close()
+		if bodyBytes, err = io.ReadAll(data); err != nil {
+			return nil, err
+		}
+		if decrypted, err = ecdhCipher.Decrypt(bodyBytes); err != nil {
+			return nil, err
+		}
+		if err = CheckErr(json.Unmarshal(decrypted, &result), &result, resp); err != nil {
+			return nil, err
+		}
+		if result.Status == 7 {
+			// Update signKey & signVal
+			signKey = result.SignKey
+			signVal, _ = c.UploadDigestRange(r, result.SignCheck)
+		} else {
+			retry = false
+		}
+		result.SHA1 = fileID
 	}
 
-	req := c.NewRequest().
-		SetQueryParams(params).
-		SetBody(encrypted).
-		SetHeaderVerbatim("Content-Type", "application/x-www-form-urlencoded").
-		SetDoNotParseResponse(true)
-	defer func() {
-		req.SetDoNotParseResponse(false)
-	}()
-	resp, err := req.Post(ApiUploadInit)
-	if err != nil {
-		return nil, err
-	}
-	data := resp.RawBody()
-	defer data.Close()
-
-	if bodyBytes, err = io.ReadAll(data); err != nil {
-		return nil, err
-	}
-	if decrypted, err = ecdhCipher.Decrypt(bodyBytes); err != nil {
-		return nil, err
-	}
-	if err = CheckErr(json.Unmarshal(decrypted, &result), &result, resp); err != nil {
-		return nil, err
-	}
-	result.SHA1 = fileID
 	return &result, nil
 }
 
 const (
 	md5Salt = "Qclm8MGWUv59TnrR0XPg"
-	appVer  = "30.1.0"
+	appVer  = "2.0.3.6"
 )
 
+func (c *Pan115Client) UploadDigestRange(r io.ReadSeeker, rangeSpec string) (result string, err error) {
+	var start, end int64
+	if _, err = fmt.Sscanf(rangeSpec, "%d-%d", &start, &end); err != nil {
+		return
+	}
+	h := sha1.New()
+	_, err = r.Seek(start, io.SeekStart)
+	if err != nil {
+		return
+	}
+	if _, err = io.CopyN(h, r, end-start+1); err == nil {
+		result = strings.ToUpper(hex.EncodeToString(h.Sum(nil)))
+	}
+
+	return
+}
+
 func (c *Pan115Client) GenerateSignature(fileID, target string) string {
-	sh1hash := sha1.Sum([]byte(strconv.FormatInt(c.UserID, 10) + fileID + fileID + target + "0"))
+	sh1hash := sha1.Sum([]byte(strconv.FormatInt(c.UserID, 10) + fileID + target + "0"))
 	sigStr := c.Userkey + hex.EncodeToString(sh1hash[:]) + "000000"
 	sh1Sig := sha1.Sum([]byte(sigStr))
 	return strings.ToUpper(hex.EncodeToString(sh1Sig[:]))
 }
 
-func (c *Pan115Client) GenerateToken(fileID, preID, timeStamp, fileSize string) string {
+func (c *Pan115Client) GenerateToken(fileID, preID, timeStamp, fileSize, signKey, signVal string) string {
 	userID := strconv.FormatInt(c.UserID, 10)
 	userIDMd5 := md5.Sum([]byte(userID))
-	tokenMd5 := md5.Sum([]byte(md5Salt + fileID + fileSize + preID + userID + timeStamp + hex.EncodeToString(userIDMd5[:]) + appVer))
+	tokenMd5 := md5.Sum([]byte(md5Salt + fileID + fileSize + signKey + signVal + userID + timeStamp + hex.EncodeToString(userIDMd5[:]) + appVer))
 	return hex.EncodeToString(tokenMd5[:])
 }
 
@@ -265,7 +287,7 @@ func (c *Pan115Client) UploadFastOrByMultipart(dirID, fileName string, fileSize 
 	}
 	// 闪传
 	if fastInfo, err = c.UploadSHA1(
-		digest.Size, fileName, dirID, digest.PreID, digest.QuickID,
+		digest.Size, fileName, dirID, digest.PreID, digest.QuickID, r,
 	); err != nil {
 		return err
 	}
