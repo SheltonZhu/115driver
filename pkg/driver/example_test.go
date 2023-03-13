@@ -45,7 +45,7 @@ func ExamplePan115Client_UploadSHA1() {
 		log.Fatalf("Open file error: %s", err)
 	}
 	d, _ := client.GetDigestResult(file)
-	resp, err := client.UploadSHA1(d.Size, "filename", "dirID", d.PreID, d.QuickID)
+	resp, err := client.UploadSHA1(d.Size, "filename", "dirID", d.PreID, d.QuickID, file)
 	if err != nil {
 		log.Fatalf("Fastupload error: %s", err)
 	}

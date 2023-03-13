@@ -71,7 +71,9 @@ var (
 
 	ErrPickCodeisEmpty = errors.New("empty pickcode")
 
-	ErrUploadSH1Invalid = errors.New("userid/filesize/target/pickcode invalid")
+	ErrUploadSH1Invalid = errors.New("userid/filesize/target/pickcode/ invalid")
+
+	ErrUploadSigInvalid = errors.New("sig invalid")
 
 	errMap = map[int]error{
 		// Normal errors
@@ -113,6 +115,7 @@ var (
 		50001: ErrPickCodeisEmpty,
 		// upload SH1
 		402: ErrUploadSH1Invalid,
+		400: ErrUploadSigInvalid,
 	}
 )
 
