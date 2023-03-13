@@ -1,6 +1,7 @@
 package driver
 
 const (
+	ApiGetVersion = "https://appversion.115.com/1/web/1.0/api/chrome"
 	// login
 	ApiLoginCheck = "https://passportapi.115.com/app/1.0/web/1.0/check/sso"
 	ApiUserInfo   = "https://my.115.com/?ct=ajax&ac=nav"
@@ -25,7 +26,7 @@ const (
 
 	// upload
 	ApiUploadInfo = "https://proapi.115.com/app/uploadinfo"
-	ApiUploadInit = "https://uplb.115.com/3.0/initupload.php"
+	ApiUploadInit = "https://uplb.115.com/4.0/initupload.php"
 
 	// oss
 	ApiUploadOSSToken = "https://uplb.115.com/3.0/gettoken.php"

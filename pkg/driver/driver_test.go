@@ -30,7 +30,7 @@ var client *Pan115Client
 func teardown(t *testing.T) func(t *testing.T) {
 	cr := &Credential{}
 	assert.Nil(t, cr.FromCookie(cookieStr))
-	client = New(UA(UA115Disk), WithDebug(), WithTrace()).ImportCredential(cr)
+	client = New(UA(UA115Desktop), WithDebug(), WithTrace()).ImportCredential(cr)
 	assert.Nil(t, client.LoginCheck())
 	rand.Seed(time.Now().Unix())
 	return func(t *testing.T) {}
@@ -44,7 +44,7 @@ func TestMkdir(t *testing.T) {
 	_, err := client.Mkdir("0", dirName)
 	assert.Nil(t, err)
 	_, err = client.Mkdir("0", dirName)
-	assert.ErrorIs(t, ErrExist, err)
+	assert.ErrorIs(t, err, ErrExist)
 }
 
 func TestDelete(t *testing.T) {
@@ -107,9 +107,9 @@ func TestDownload(t *testing.T) {
 
 	pickCode := NowMilli().String()
 	_, err := client.Download(pickCode)
-	assert.ErrorIs(t, ErrPickCodeNotExist, err)
+	assert.ErrorIs(t, err, ErrPickCodeNotExist)
 	_, err = client.Download("")
-	assert.ErrorIs(t, ErrPickCodeisEmpty, err)
+	assert.ErrorIs(t, err, ErrPickCodeisEmpty)
 }
 
 func TestGetUploadInfo(t *testing.T) {
@@ -125,7 +125,7 @@ func TestUploadSHA1(t *testing.T) {
 	r := strings.NewReader(NowMilli().String())
 	d, err := client.GetDigestResult(r)
 	assert.Nil(t, err)
-	_, err = client.UploadSHA1(d.Size, "xxx.txt", "0", d.PreID, d.QuickID)
+	_, err = client.UploadSHA1(d.Size, "xxx.txt", "0", d.PreID, d.QuickID, r)
 	assert.Nil(t, err)
 }
 
@@ -148,7 +148,7 @@ func TestUploadByOSS(t *testing.T) {
 	assert.Nil(t, err)
 	_, err = r.Seek(0, io.SeekStart)
 	assert.Nil(t, err)
-	resp, err := client.UploadSHA1(d.Size, randStr+".txt", "0", d.PreID, d.QuickID)
+	resp, err := client.UploadSHA1(d.Size, randStr+".txt", "0", d.PreID, d.QuickID, r)
 	assert.Nil(t, err)
 	ok, err := resp.Ok()
 	assert.Nil(t, err)
@@ -213,7 +213,7 @@ func TestGet(t *testing.T) {
 	down := teardown(t)
 	defer down(t)
 
-	_, err := client.GetFile("2491635336026092299")
+	_, err := client.GetFile("")
 	assert.Error(t, err)
 }
 
