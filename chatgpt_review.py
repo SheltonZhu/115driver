@@ -1,6 +1,7 @@
 import os
 import requests
 import json
+import sys
 
 def get_chatgpt_review(api_token, pr_number):
     headers = {
