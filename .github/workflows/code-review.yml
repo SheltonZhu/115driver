@@ -37,7 +37,7 @@ jobs:
           git checkout $last_commit
     
           # Call ChatGPT for review
-          review=$(python3 chatgpt.py -c $pr_branch -f diff)
+          review=$(python3 chatgpt_review.py -c $pr_branch -f diff)
     
           # Post a comment on the PR with the review
           curl -H "Authorization: token $GITHUB_TOKEN" \
