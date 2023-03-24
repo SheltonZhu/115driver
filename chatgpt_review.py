@@ -1,23 +1,26 @@
+import os
+from typing import Any, Dict
+
 import requests
 
 
-def get_code_diff(branch):
-    """Gets the code difference between main branch and current branch"""
-    url = f"https://api.github.com/repos/{GITHUB_REPOSITORY}/compare/main...{branch}"
-    headers = {
-        "Authorization": f"token {GITHUB_TOKEN}",
-        "Accept": "application/vnd.github.v3+json",
-    }
-    response = requests.get(url, headers=headers)
-    if response.status_code != 200:
-        raise Exception(f"Failed to get diff: {response.content}")
+def get_auth_headers(token: str) -> Dict[str, str]:
+    return {"Authorization": f"token {token}", "Accept": "application/vnd.github.v3+json"}
+
+
+def get_url(endpoint: str) -> str:
+    return f"https://api.github.com{endpoint}"
+
+
+def get_code_diff(owner: str, repo_name: str, branch: str) -> Dict[str, Any]:
+    url = get_url(f"/repos/{owner}/{repo_name}/compare/main...{branch}")
+    response = requests.get(url, headers=get_auth_headers(os.environ["GITHUB_TOKEN"]))
+    response.raise_for_status()
     return response.json()["files"]
 
 
-def request_review(diff):
-    """Requests a review from ChatGPT"""
-    url = "https://api.openai.com/v1/review/requests"
-    headers = {"Authorization": f"Bearer {CHATGPT_API_KEY}"}
+def request_review(diff: str, api_key: str) -> str:
+    headers = {"Authorization": f"Bearer {api_key}"}
     data = {
         "comment": "",
         "model": "text-davinci-002",
@@ -26,9 +29,8 @@ def request_review(diff):
         "max_tokens": 1024,
         "n": 1,
     }
-    response = requests.post(url, headers=headers, json=data)
-    if response.status_code != 200:
-        raise Exception(f"Failed to request review: {response.content}")
+    response = requests.post("https://api.openai.com/v1/review/requests", headers=headers, json=data)
+    response.raise_for_status()
     return response.json()["choices"][0]["text"]
 
 
@@ -40,6 +42,7 @@ if __name__ == "__main__":
     parser.add_argument("-f", "--diff-format", type=str, default="unified")
     args = parser.parse_args()
 
-    diff = get_code_diff(args.current_branch)
-    review = request_review(diff)
+    owner, repo_name = os.environ["GITHUB_REPOSITORY"].split("/")
+    diff = get_code_diff(owner, repo_name, args.current_branch)
+    review = request_review(diff, os.environ["CHATGPT_API_KEY"])
     print(review)
