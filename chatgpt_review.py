@@ -1,37 +1,45 @@
-import os
 import requests
-import json
-import sys
 
-def get_chatgpt_review(api_token, pr_number):
+
+def get_code_diff(branch):
+    """Gets the code difference between main branch and current branch"""
+    url = f"https://api.github.com/repos/{GITHUB_REPOSITORY}/compare/main...{branch}"
     headers = {
-      'Authorization': 'Bearer {0}'.format(api_token),
-      'Content-Type': 'application/json'
+        "Authorization": f"token {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json",
     }
+    response = requests.get(url, headers=headers)
+    if response.status_code != 200:
+        raise Exception(f"Failed to get diff: {response.content}")
+    return response.json()["files"]
 
+
+def request_review(diff):
+    """Requests a review from ChatGPT"""
+    url = "https://api.openai.com/v1/review/requests"
+    headers = {"Authorization": f"Bearer {CHATGPT_API_KEY}"}
     data = {
-        'type': 'pull_request',
-        'number': pr_number,
-        'repository': {
-            'full_name': os.environ.get('GITHUB_REPOSITORY')
-        }
+        "comment": "",
+        "model": "text-davinci-002",
+        "prompt": f"Review the following code diff:\n\n{diff}",
+        "temperature": 0.5,
+        "max_tokens": 1024,
+        "n": 1,
     }
+    response = requests.post(url, headers=headers, json=data)
+    if response.status_code != 200:
+        raise Exception(f"Failed to request review: {response.content}")
+    return response.json()["choices"][0]["text"]
 
-    response = requests.post('https://api.chatgpt.com/review', headers=headers, json=data)
 
-    return response.json()
+if __name__ == "__main__":
+    import argparse
 
-def post_to_comment(comment_text, pr_number, github_token):
-    url = f'https://api.github.com/repos/{os.environ.get("GITHUB_REPOSITORY")}/issues/{pr_number}/comments'
-    payload = {"body": comment_text}
-    headers = {"Authorization": f"Bearer {github_token}"}
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-c", "--current-branch", type=str, required=True)
+    parser.add_argument("-f", "--diff-format", type=str, default="unified")
+    args = parser.parse_args()
 
-    requests.post(url, headers=headers, json=payload)
-
-# Retrieve inputs and environment variables
-pr_number = int(os.environ['INPUT_PR_NUMBER'])
-github_token = os.environ['GITHUB_TOKEN']
-chatgpt_api_token = os.environ['CHATGPT_API_TOKEN']
-
-review_result = get_chatgpt_review(chatgpt_api_token, pr_number)
-post_to_comment(review_result['data']['comment'], pr_number, github_token)
+    diff = get_code_diff(args.current_branch)
+    review = request_review(diff)
+    print(review)
