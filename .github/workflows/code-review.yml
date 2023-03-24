@@ -23,6 +23,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CHATGPT_API_KEY: ${{ secrets.CHATGPT_API_KEY }}
+          GITHUB_REPOSITORY: ${{ env.GITHUB_REPOSITORY }}
         run: |
           # Get PR number and branch
           pr_number=$(echo "$GITHUB_REF" | cut -d / -f 3)
