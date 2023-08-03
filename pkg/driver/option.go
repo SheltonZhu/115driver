@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"time"
 
+	"crypto/tls"
+
 	"github.com/go-resty/resty/v2"
 )
 
@@ -48,6 +50,12 @@ func WithTrace() Option {
 func WithProxy(proxy string) Option {
 	return func(c *Pan115Client) {
 		c.SetProxy(proxy)
+	}
+}
+
+func InsecureSkipVerify(insecureSkipVerify bool) Option {
+	return func(c *Pan115Client) {
+		c.Client.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: insecureSkipVerify})
 	}
 }
 

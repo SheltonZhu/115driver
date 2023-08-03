@@ -37,8 +37,8 @@ func (info *DownloadInfo) Get() (io.ReadSeeker, error) {
 
 type DownloadData map[string]*DownloadInfo
 
-// Download get download info with pickcode
-func (c *Pan115Client) Download(pickCode string) (*DownloadInfo, error) {
+// DownloadWithUA get download info with pickcode and user agent
+func (c *Pan115Client) DownloadWithUA(pickCode, ua string) (*DownloadInfo, error) {
 	key := crypto.GenerateKey()
 
 	result := DownloadReap{}
@@ -53,6 +53,9 @@ func (c *Pan115Client) Download(pickCode string) (*DownloadInfo, error) {
 		SetFormData(map[string]string{"data": data}).
 		ForceContentType("application/json").
 		SetResult(&result)
+	if len(ua) > 0 {
+		req = req.SetHeader("User-Agent", ua)
+	}
 	resp, err := req.Post(ApiDownloadGetUrl)
 
 	if err := CheckErr(err, &result, resp); err != nil {
@@ -76,4 +79,9 @@ func (c *Pan115Client) Download(pickCode string) (*DownloadInfo, error) {
 		return info, nil
 	}
 	return nil, ErrUnexpected
+}
+
+// Download get download info with pickcode
+func (c *Pan115Client) Download(pickCode string) (*DownloadInfo, error) {
+	return c.DownloadWithUA(pickCode, "")
 }

@@ -69,7 +69,7 @@ var (
 
 	ErrPickCodeNotExist = errors.New("pickcode does not exist")
 
-	ErrPickCodeisEmpty = errors.New("empty pickcode")
+	ErrPickCodeIsEmpty = errors.New("empty pickcode")
 
 	ErrUploadSH1Invalid = errors.New("userid/filesize/target/pickcode/ invalid")
 
@@ -112,7 +112,7 @@ var (
 		990002: ErrWrongParams,
 		//PickCode
 		50003: ErrPickCodeNotExist,
-		50001: ErrPickCodeisEmpty,
+		50001: ErrPickCodeIsEmpty,
 		// upload SH1
 		402: ErrUploadSH1Invalid,
 		400: ErrUploadSigInvalid,

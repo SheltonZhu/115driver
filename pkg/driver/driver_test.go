@@ -2,7 +2,6 @@ package driver
 
 import (
 	"io"
-	"math/rand"
 	"os"
 	"strings"
 	"testing"
@@ -32,7 +31,6 @@ func teardown(t *testing.T) func(t *testing.T) {
 	assert.Nil(t, cr.FromCookie(cookieStr))
 	client = New(UA(UA115Desktop), WithDebug(), WithTrace()).ImportCredential(cr)
 	assert.Nil(t, client.LoginCheck())
-	rand.Seed(time.Now().Unix())
 	return func(t *testing.T) {}
 }
 
@@ -109,7 +107,7 @@ func TestDownload(t *testing.T) {
 	_, err := client.Download(pickCode)
 	assert.ErrorIs(t, err, ErrPickCodeNotExist)
 	_, err = client.Download("")
-	assert.ErrorIs(t, err, ErrPickCodeisEmpty)
+	assert.ErrorIs(t, err, ErrPickCodeIsEmpty)
 }
 
 func TestGetUploadInfo(t *testing.T) {
@@ -125,7 +123,7 @@ func TestUploadSHA1(t *testing.T) {
 	r := strings.NewReader(NowMilli().String())
 	d, err := client.GetDigestResult(r)
 	assert.Nil(t, err)
-	_, err = client.UploadSHA1(d.Size, "xxx.txt", "0", d.PreID, d.QuickID, r)
+	_, err = client.UploadSHA1(d.Size, "xxxa.txt", "0", d.PreID, d.QuickID, r)
 	assert.Nil(t, err)
 }
 
@@ -165,7 +163,7 @@ func TestUpload(t *testing.T) {
 	assert.Nil(t, client.UploadFastOrByOSS("0", randStr+".txt", r.Size(), r))
 }
 
-func TestUploadMultpart(t *testing.T) {
+func TestUploadMultipart(t *testing.T) {
 	start := time.Now()
 
 	down := teardown(t)

@@ -1,6 +1,6 @@
 module github.com/SheltonZhu/115driver
 
-go 1.19
+go 1.20
 
 require (
 	github.com/aliyun/aliyun-oss-go-sdk v2.2.5+incompatible
