@@ -2,7 +2,6 @@ package driver
 
 import (
 	"io"
-	"math/rand"
 	"os"
 	"strings"
 	"testing"
@@ -32,7 +31,6 @@ func teardown(t *testing.T) func(t *testing.T) {
 	assert.Nil(t, cr.FromCookie(cookieStr))
 	client = New(UA(UA115Desktop), WithDebug(), WithTrace()).ImportCredential(cr)
 	assert.Nil(t, client.LoginCheck())
-	rand.Seed(time.Now().Unix())
 	return func(t *testing.T) {}
 }
 
