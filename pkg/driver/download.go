@@ -11,9 +11,9 @@ import (
 )
 
 type FileDownloadUrl struct {
-	Client int    `json:"client"`
-	OSSID  string `json:"oss_id"`
-	Url    string `json:"url"`
+	Client float64 `json:"client"`
+	OSSID  string  `json:"oss_id"`
+	Url    string  `json:"url"`
 }
 
 type DownloadInfo struct {
