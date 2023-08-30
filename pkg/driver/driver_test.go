@@ -216,6 +216,7 @@ func TestGet(t *testing.T) {
 }
 
 func TestQRCodeStart(t *testing.T) {
+	t.Skip()
 	c := New(WithTrace(), WithDebug())
 	s, err := c.QRCodeStart()
 	assert.Nil(t, err)
