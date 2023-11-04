@@ -8,7 +8,7 @@ type LoginResp struct {
 	Code     int  `json:"code"`
 	CheckSsd bool `json:"check_ssd"`
 	Data     struct {
-		Expire int    `json:"expire"`
+		Expire int64  `json:"expire"`
 		Link   string `json:"link"`
 		UserID int64  `json:"user_id"`
 	} `json:"data"`
@@ -302,7 +302,7 @@ type QRCodeLoginResp struct {
 		IsChangPasswd int         `json:"is_chang_passwd"`
 		IsFirstLogin  int         `json:"is_first_login"`
 		IsTrusted     interface{} `json:"is_trusted"`
-		IsVip         int         `json:"is_vip"`
+		IsVip         int64       `json:"is_vip"`
 		Mark          int         `json:"mark"`
 		Mobile        string      `json:"mobile"`
 		UserID        int         `json:"user_id"`
