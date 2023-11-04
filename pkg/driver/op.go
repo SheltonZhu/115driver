@@ -154,7 +154,7 @@ func (c *Pan115Client) Stat(fileID string) (*FileStatInfo, error) {
 	return info, nil
 }
 
-// GetInfo gets information of a file or directory by its ID.
+// GetFile gets information of a file or directory by its ID.
 func (c *Pan115Client) GetFile(fileID string) (*File, error) {
 	result := GetFileInfoResponse{}
 	req := c.NewRequest().

@@ -1,6 +1,7 @@
 package driver
 
 import (
+	"encoding/json"
 	"time"
 )
 
@@ -62,8 +63,8 @@ type MkdirResp struct {
 	BasicResp
 	AreaID IntString `json:"aid"`
 
-	CategoryID   string `json:"cid"`
-	CategoryName string `json:"cname"`
+	CategoryID   IntString `json:"cid"`
+	CategoryName string    `json:"cname"`
 
 	FileID   string `json:"file_id"`
 	FileName string `json:"file_name"`
@@ -88,7 +89,7 @@ type FileListResp struct {
 
 type FileInfo struct {
 	AreaID     IntString `json:"aid"`
-	CategoryID string    `json:"cid"`
+	CategoryID IntString `json:"cid"`
 	FileID     string    `json:"fid"`
 	ParentID   string    `json:"pid"`
 
@@ -207,9 +208,22 @@ func (r *UploadOSSTokenResp) Err(respBody ...string) error {
 	return ErrUnexpected
 }
 
-type DownloadReap struct {
+type DownloadResp struct {
 	BasicResp
-	EncodedData string `json:"data,omitempty"`
+	EncodedData DataString `json:"data,omitempty"`
+}
+
+type DataString string
+
+func (v *DataString) UnmarshalJSON(b []byte) (err error) {
+	var s string
+	if b[0] == '"' {
+		err = json.Unmarshal(b, &s)
+	}
+	if err == nil {
+		*v = DataString(s)
+	}
+	return
 }
 
 type UserInfoResp struct {
@@ -313,4 +327,60 @@ type QRCodeLoginResp struct {
 type QRCodeStatusResp struct {
 	QRCodeBasicResp
 	Data QRCodeStatus `json:"data"`
+}
+
+type ShareSnapResp struct {
+	BasicResp
+	Data struct {
+		Userinfo struct {
+			UserID   string `json:"user_id"`
+			UserName string `json:"user_name"`
+			Face     string `json:"face"`
+		} `json:"userinfo"`
+		Shareinfo struct {
+			SnapID           string      `json:"snap_id"`
+			FileSize         StringInt64 `json:"file_size"`
+			ShareTitle       string      `json:"share_title"`
+			ShareState       string      `json:"share_state"`
+			ForbidReason     string      `json:"forbid_reason"`
+			CreateTime       StringInt64 `json:"create_time"`
+			ReceiveCode      string      `json:"receive_code"`
+			ReceiveCount     string      `json:"receive_count"`
+			ExpireTime       int64       `json:"expire_time"`
+			FileCategory     int64       `json:"file_category"`
+			AutoRenewal      string      `json:"auto_renewal"`
+			AutoFillRecvcode string      `json:"auto_fill_recvcode"`
+			CanReport        int         `json:"can_report"`
+			CanNotice        int         `json:"can_notice"`
+			HaveVioFile      int         `json:"have_vio_file"`
+		} `json:"shareinfo"`
+		Count      int         `json:"count"`
+		List       []ShareFile `json:"list"`
+		ShareState string      `json:"share_state"`
+		UserAppeal struct {
+			CanAppeal       int `json:"can_appeal"`
+			CanShareAppeal  int `json:"can_share_appeal"`
+			PopupAppealPage int `json:"popup_appeal_page"`
+			CanGlobalAppeal int `json:"can_global_appeal"`
+		} `json:"user_appeal"`
+	} `json:"data"`
+}
+
+type ShareFile struct {
+	FileID     string       `json:"fid"`
+	UID        int          `json:"uid"`
+	CategoryID IntString    `json:"cid"`
+	FileName   string       `json:"n"`
+	Type       string       `json:"ico"`
+	Sha1       string       `json:"sha"`
+	Size       StringInt64  `json:"s"`
+	Labels     []*LabelInfo `json:"fl"`
+	UpdateTime string       `json:"t"`
+	IsFile     int          `json:"fc"`
+	ParentID   string       `json:"pid"`
+	// Ns         string       `json:"ns"`
+	// D          int          `json:"d"`
+	// C          int          `json:"c"`
+	// E          string       `json:"e"`
+	// U          string       `json:"u"`
 }

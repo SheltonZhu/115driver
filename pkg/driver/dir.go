@@ -22,7 +22,7 @@ func (c *Pan115Client) Mkdir(parentID string, name string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return result.CategoryID, nil
+	return string(result.CategoryID), nil
 }
 
 // List list all files and directories
@@ -30,7 +30,7 @@ func (c *Pan115Client) List(dirID string) (*[]File, error) {
 	return c.ListWithLimit(dirID, FileListLimit)
 }
 
-// List list all files and directories with limit
+// ListWithLimit list all files and directories with limit
 func (c *Pan115Client) ListWithLimit(dirID string, limit int64) (*[]File, error) {
 	var files []File
 	offset := int64(0)
@@ -51,7 +51,7 @@ func (c *Pan115Client) ListWithLimit(dirID string, limit int64) (*[]File, error)
 	return &files, nil
 }
 
-// List list all files and directories with offset and limit
+// ListPage list files and directories with page
 func (c *Pan115Client) ListPage(dirID string, offset, limit int64) (*[]File, error) {
 	var files []File
 	req := c.NewRequest().ForceContentType("application/json;charset=UTF-8")

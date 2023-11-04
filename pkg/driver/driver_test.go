@@ -10,6 +10,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var (
+	cookieStr = ""
+	client    *Pan115Client
+)
+
+func TestMain(m *testing.M) {
+	cookieStr = os.Getenv("COOKIE")
+	os.Exit(m.Run())
+}
+
 func TestImportFromCookie(t *testing.T) {
 	cr := &Credential{}
 	assert.Nil(t, cr.FromCookie("UID=1;CID=2;SEID=3;other=4"))
@@ -22,9 +32,6 @@ func TestImportFromCookie(t *testing.T) {
 func TestLogin(t *testing.T) {
 	assert.Error(t, New().ImportCredential(&Credential{}).LoginCheck())
 }
-
-var cookieStr = ""
-var client *Pan115Client
 
 func teardown(t *testing.T) func(t *testing.T) {
 	cr := &Credential{}
@@ -110,12 +117,21 @@ func TestDownload(t *testing.T) {
 	assert.ErrorIs(t, err, ErrPickCodeIsEmpty)
 }
 
+func TestDownloadByShareCode(t *testing.T) {
+	down := teardown(t)
+	defer down(t)
+
+	_, err := client.DownloadByShareCode("ssw60op83nuc", "y909", "2722742594004297631")
+	assert.ErrorIs(t, err, ErrSharedNotFound)
+}
+
 func TestGetUploadInfo(t *testing.T) {
 	down := teardown(t)
 	defer down(t)
 
 	assert.Nil(t, client.GetUploadInfo())
 }
+
 func TestUploadSHA1(t *testing.T) {
 	down := teardown(t)
 	defer down(t)
@@ -242,4 +258,12 @@ func TestQRCodeStart(t *testing.T) {
 		_, err = c.QRCodeLogin(s)
 		assert.Error(t, err)
 	}
+}
+
+func TestShareSnap(t *testing.T) {
+	down := teardown(t)
+	defer down(t)
+
+	_, err := client.GetShareSnap("ssw60op83nuc", "test", "")
+	assert.ErrorIs(t, err, ErrSharedNotFound)
 }

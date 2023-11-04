@@ -69,6 +69,10 @@ var (
 
 	ErrPickCodeNotExist = errors.New("pickcode does not exist")
 
+	ErrSharedInvalid = errors.New("shared link invalid")
+
+	ErrSharedNotFound = errors.New("shared link not found")
+
 	ErrPickCodeIsEmpty = errors.New("empty pickcode")
 
 	ErrUploadSH1Invalid = errors.New("userid/filesize/target/pickcode/ invalid")
@@ -110,7 +114,10 @@ var (
 		1001:   ErrWrongParams,
 		200900: ErrWrongParams,
 		990002: ErrWrongParams,
-		//PickCode
+		// share
+		4100009: ErrSharedInvalid,
+		4100026: ErrSharedNotFound,
+		// pickCode
 		50003: ErrPickCodeNotExist,
 		50001: ErrPickCodeIsEmpty,
 		// upload SH1

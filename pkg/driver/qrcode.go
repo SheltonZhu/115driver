@@ -20,7 +20,7 @@ func (s *QRCodeSession) QRCode() ([]byte, error) {
 	return qrcode.Encode(s.QrcodeContent, qrcode.Medium, 256)
 }
 
-// QrcodeStart starts a QRCode login session.
+// QRCodeStart starts a QRCode login session.
 func (c *Pan115Client) QRCodeStart() (*QRCodeSession, error) {
 	result := QRCodeTokenResp{}
 	resp, err := c.NewRequest().
@@ -34,7 +34,7 @@ func (c *Pan115Client) QRCodeStart() (*QRCodeSession, error) {
 	return &result.Data, nil
 }
 
-// QrcodeLogin logins user through QRCode.
+// QRCodeLogin logins user through QRCode.
 // You SHOULD call this method ONLY when `QRCodeStatus.IsAllowed()` is true.
 func (c *Pan115Client) QRCodeLogin(s *QRCodeSession) (*Credential, error) {
 	result := QRCodeLoginResp{}
@@ -76,13 +76,13 @@ func (s *QRCodeStatus) IsCanceled() bool {
 }
 
 /*
-	QRCodeStatus
+	QRCodeStatus represents the status of a QRCode session.
 
-There will be 4 kinds of status:
-  - Waiting
-  - Scanned
-  - Allowed
-  - Canceled
+	There are 4 possible status values:
+	- Waiting
+	- Scanned
+	- Allowed
+	- Canceled
 */
 func (c *Pan115Client) QRCodeStatus(s *QRCodeSession) (*QRCodeStatus, error) {
 	result := QRCodeStatusResp{}

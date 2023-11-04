@@ -376,7 +376,7 @@ func (c *Pan115Client) UploadByMultipart(params *UploadOSSParams, fileSize int64
 		go func(threadId int) {
 			defer func() {
 				if r := recover(); r != nil {
-					errCh <- fmt.Errorf("Recovered in %v", r)
+					errCh <- fmt.Errorf("recovered in %v", r)
 				}
 			}()
 			for chunk := range chunksCh {

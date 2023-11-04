@@ -36,14 +36,14 @@ type File struct {
 func (f *File) from(fileInfo *FileInfo) *File {
 	if fileInfo.FileID != "" {
 		f.FileID = fileInfo.FileID
-		f.ParentID = fileInfo.CategoryID
+		f.ParentID = string(fileInfo.CategoryID)
 		f.IsDirectory = false
 		localTime, err := time.ParseInLocation("2006-01-02 15:04", fileInfo.UpdateTime, time.Local)
 		if err == nil {
 			f.UpdateTime = time.Unix(localTime.Unix(), 0)
 		}
 	} else {
-		f.FileID = fileInfo.CategoryID
+		f.FileID = string(fileInfo.CategoryID)
 		f.ParentID = fileInfo.ParentID
 		f.IsDirectory = true
 		t, err := strconv.ParseInt(fileInfo.UpdateTime, 10, 64)

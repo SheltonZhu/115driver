@@ -28,7 +28,7 @@ func New(opts ...Option) *Pan115Client {
 	return c
 }
 
-// Default creates an Client with default settings.
+// Defalut creates an Client with default settings.
 func Defalut() *Pan115Client {
 	return New(UA())
 }
