@@ -123,6 +123,10 @@ type UploadInfoResp struct {
 	UserID  int64  `json:"user_id"`
 	Userkey string `json:"userkey"`
 }
+type UploadEndpointResp struct {
+	Endpoint    string `json:"endpoint"`
+	GetTokenURL string `json:"gettokenurl"`
+}
 
 type UploadMetaInfo struct {
 	AppID            int64    `json:"app_id"`

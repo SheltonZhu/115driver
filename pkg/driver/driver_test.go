@@ -132,6 +132,12 @@ func TestGetUploadInfo(t *testing.T) {
 	assert.Nil(t, client.GetUploadInfo())
 }
 
+func TestGetUPloadEndpoint(t *testing.T) {
+	result := UploadEndpointResp{}
+	assert.NoError(t, New().GetUploadEndpoint(&result))
+	assert.NotEmpty(t, result)
+}
+
 func TestUploadSHA1(t *testing.T) {
 	down := teardown(t)
 	defer down(t)

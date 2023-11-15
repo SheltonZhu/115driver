@@ -29,8 +29,9 @@ const (
 	ApiDownloadGetShareUrl = "https://proapi.115.com/app/share/downurl"
 
 	// upload
-	ApiUploadInfo = "https://proapi.115.com/app/uploadinfo"
-	ApiUploadInit = "https://uplb.115.com/4.0/initupload.php"
+	ApiUploadInfo        = "https://proapi.115.com/app/uploadinfo"
+	ApiGetUploadEndpoint = "https://uplb.115.com/3.0/getuploadinfo.php"
+	ApiUploadInit        = "https://uplb.115.com/4.0/initupload.php"
 
 	// oss
 	ApiUploadOSSToken = "https://uplb.115.com/3.0/gettoken.php"

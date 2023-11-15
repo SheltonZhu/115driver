@@ -8,11 +8,12 @@ import (
 
 // Pan115Client driver client
 type Pan115Client struct {
-	Client         *resty.Client
-	Request        *resty.Request
-	UserID         int64
-	Userkey        string
-	UploadMetaInfo *UploadMetaInfo
+	Client            *resty.Client
+	Request           *resty.Request
+	UserID            int64
+	Userkey           string
+	UploadMetaInfo    *UploadMetaInfo
+	UseInternalUpload bool
 }
 
 // New creates Client with customized options.

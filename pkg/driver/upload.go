@@ -29,6 +29,18 @@ func (c *Pan115Client) GetDigestResult(r io.Reader) (*hash.DigestResult, error) 
 	return &d, hash.Digest(r, &d)
 }
 
+// GetUploadEndpoint get upload endPoint
+func (c *Pan115Client) GetUploadEndpoint(endpoint *UploadEndpointResp) error {
+	req := c.NewRequest().
+		ForceContentType("application/json;charset=UTF-8").
+		SetResult(&endpoint)
+	_, err := req.Get(ApiGetUploadEndpoint)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // GetUploadInfo get some info for upload
 func (c *Pan115Client) GetUploadInfo() error {
 	result := UploadInfoResp{}
@@ -91,13 +103,30 @@ func (c *Pan115Client) UploadFastOrByOSS(dirID, fileName string, fileSize int64,
 	return c.UploadByOSS(&fastInfo.UploadOSSParams, r, dirID)
 }
 
+// getOSSEndpoint get oss endpoint 利用阿里云内网上传文件，需要在阿里云服务器上运行本程序，同时也需要115在服务器的所在地域开通了阿里云OSS
+func (c *Pan115Client) getOSSEndpoint(enableInternalUpload ...bool) string {
+	if len(enableInternalUpload) > 0 && enableInternalUpload[0] {
+		uploadEndpoint := UploadEndpointResp{}
+		if err := c.GetUploadEndpoint(&uploadEndpoint); err != nil {
+			// TODO warn error log
+			return OSSEndpoint
+		}
+		i := strings.Index(uploadEndpoint.Endpoint, ".aliyuncs.com")
+		if i > -1 {
+			endpoint := uploadEndpoint.Endpoint[:i] + "-internal" + uploadEndpoint.Endpoint[i:]
+			return endpoint
+		}
+	}
+	return OSSEndpoint
+}
+
 // UploadByOSS use aliyun sdk to upload
 func (c *Pan115Client) UploadByOSS(params *UploadOSSParams, r io.Reader, dirID string) error {
 	ossToken, err := c.GetOSSToken()
 	if err != nil {
 		return err
 	}
-	ossClient, err := oss.New(OSSEndpoint, ossToken.AccessKeyID, ossToken.AccessKeySecret)
+	ossClient, err := oss.New(c.getOSSEndpoint(c.UseInternalUpload), ossToken.AccessKeyID, ossToken.AccessKeySecret)
 	if err != nil {
 		return err
 	}
@@ -331,7 +360,7 @@ func (c *Pan115Client) UploadByMultipart(params *UploadOSSParams, fileSize int64
 		return err
 	}
 
-	if ossClient, err = oss.New(OSSEndpoint, ossToken.AccessKeyID, ossToken.AccessKeySecret); err != nil {
+	if ossClient, err = oss.New(c.getOSSEndpoint(c.UseInternalUpload), ossToken.AccessKeyID, ossToken.AccessKeySecret); err != nil {
 		return err
 	}
 
