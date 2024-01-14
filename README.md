@@ -1,6 +1,6 @@
 # 115driver
 
-![Version](https://img.shields.io/badge/release-v1.0.21-brightgreen?style=flat-square) [![Reference](https://img.shields.io/badge/Go-Reference-blue.svg?style=flat-square)](https://pkg.go.dev/github.com/SheltonZhu/115driver) ![License](https://img.shields.io/:License-MIT-green.svg?style=flat-square)
+![Version](https://img.shields.io/badge/release-v1.0.22-brightgreen?style=flat-square) [![Reference](https://img.shields.io/badge/Go-Reference-blue.svg?style=flat-square)](https://pkg.go.dev/github.com/SheltonZhu/115driver) ![License](https://img.shields.io/:License-MIT-green.svg?style=flat-square)
 
 ## Example
 
@@ -20,7 +20,7 @@ func main() {
     }
     // or err := cr.FromCookie(cookieStr)
 
-    client = driver.Defalut().ImportCredential(cr)
+    client := driver.Defalut().ImportCredential(cr)
     if err := driver.LoginCheck(); err != nil {
         log.Fatalf("login error: %s", err)
     }
@@ -44,8 +44,8 @@ More examples can be found in [reference](https://pkg.go.dev/github.com/SheltonZ
   * [X] Delete
   * [X] Make Directory
   * [X] Download
-  * [X] Upload SHA1
   * [X] Upload
+  * [X] Rapid Upload
   * [ ] Search
   * [X] Get Information by ID
   * [X] Stat File

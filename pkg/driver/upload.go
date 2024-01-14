@@ -174,8 +174,13 @@ func (c *Pan115Client) GetOSSToken() (*UploadOSSTokenResp, error) {
 	return &result, CheckErr(err, &result, resp)
 }
 
-// UploadSHA1 upload a sha1 for upload
+// UploadSHA1 upload a sha1, alias of RapidUpload, deprecated
 func (c *Pan115Client) UploadSHA1(fileSize int64, fileName, dirID, preID, fileID string, r io.ReadSeeker) (*UploadInitResp, error) {
+	return c.RapidUpload(fileSize, fileName, dirID, preID, fileID, r)
+}
+
+// RapidUpload rapid upload
+func (c *Pan115Client) RapidUpload(fileSize int64, fileName, dirID, preID, fileID string, r io.ReadSeeker) (*UploadInitResp, error) {
 	var (
 		ecdhCipher   *cipher.EcdhCipher
 		encrypted    []byte
