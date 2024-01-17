@@ -4,16 +4,17 @@
 # ==============================================================================
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.3.0
+    rev: v4.5.0
     hooks:
       - id: check-yaml
       # - id: check-toml
+      - id: end-of-file-fixer # 确保文件以换行符结尾且仅以换行符结尾
       - id: check-merge-conflict
       - id: trailing-whitespace
       # - id: check-symlinks
       - id: end-of-file-fixer
       - id: check-added-large-files
-        args: [--maxkb=51200]
+        args: [--maxkb=1024]
   - repo: https://github.com/dnephin/pre-commit-golang
     rev: v0.5.0
     hooks:
@@ -23,8 +24,8 @@ repos:
       - id: go-imports
       - id: go-mod-tidy
       - id: golangci-lint
-      # - id: go-cyclo
-      #   args: [-over=15]
+      - id: go-cyclo
+        args: [-over=15]
       # - id: validate-toml
       # - id: no-go-testing
       # - id: go-critic

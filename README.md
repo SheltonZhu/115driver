@@ -1,6 +1,31 @@
 # 115driver
 
-![Version](https://img.shields.io/badge/release-v1.0.23-brightgreen?style=flat-square) [![Reference](https://img.shields.io/badge/Go-Reference-blue.svg?style=flat-square)](https://pkg.go.dev/github.com/SheltonZhu/115driver) ![License](https://img.shields.io/:License-MIT-green.svg?style=flat-square)
+🖴 A 115 cloud driver package.
+
+[![Goreport](https://goreportcard.com/badge/github.com/SheltonZhu/115driver)](https://goreportcard.com/report/github.com/SheltonZhu/115driver) [![Version](https://img.shields.io/badge/release-v1.0.23-blue)](https://github.com/SheltonZhu/115driver/tags) [![Reference](https://img.shields.io/badge/Go-Reference-red.svg)](https://pkg.go.dev/github.com/SheltonZhu/115driver) [![License](https://img.shields.io/:License-MIT-orange.svg)](https://raw.githubusercontent.com/SheltonZhu/115driver/main/LICENSE)
+
+---
+
+## Features
+
+* Login
+  * [X] Import credential from cookies
+  * [x] Login via QRCode
+  * [X] Get signed-in user information
+* File
+  * [X] List
+  * [X] Rename
+  * [X] Move
+  * [X] Copy
+  * [X] Delete
+  * [X] Make Directory
+  * [X] Download
+  * [X] Upload
+  * [X] Rapid Upload
+  * [ ] Search
+  * [X] Get Information by ID
+  * [X] Stat File
+  * [x] Download by share code
 
 ## Example
 
@@ -29,27 +54,6 @@ func main() {
 ```
 
 More examples can be found in [reference](https://pkg.go.dev/github.com/SheltonZhu/115driver).
-
-## Features
-
-* Login
-  * [X] Import credential from cookies
-  * [x] Login via QRCode
-  * [X] Get signed-in user information
-* File
-  * [X] List
-  * [X] Rename
-  * [X] Move
-  * [X] Copy
-  * [X] Delete
-  * [X] Make Directory
-  * [X] Download
-  * [X] Upload
-  * [X] Rapid Upload
-  * [ ] Search
-  * [X] Get Information by ID
-  * [X] Stat File
-  * [x] Download by share code
 
 ## License
 
