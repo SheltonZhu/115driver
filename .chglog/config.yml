@@ -1,0 +1,50 @@
+style: gitlab
+template: CHANGELOG.tpl.md
+info:
+  title: CHANGELOG
+  repository_url: https://github.com/SheltonZhu/115driver
+options:
+  commits:
+    filters:
+      Type:
+        - feat
+        - fix
+        - perf
+        - refactor
+        - reverts
+  commit_groups:
+    title_maps:
+      feat: "&#x1F680; Features"
+      fix: "&#x1F41E; Bug Fixes"
+      perf: "&#x1F3CE; Performance"
+      refactor: "&#x1F528; Refactoring"
+  header:
+    pattern: "^(\\w*)(?:\\(([\\w\\$\\.\\-\\*\\s]*)\\))?\\:\\s(.*)$"
+    pattern_maps:
+      - Type
+      - Scope
+      - Subject
+  merges:
+    pattern: "^Merge branch '(\\w+)'$"
+    pattern_maps:
+      - Source
+
+  reverts:
+    pattern: "^Revert \"([\\s\\S]*)\"$"
+    pattern_maps:
+      - Header
+
+  issues:
+    prefix:
+      - tapd#
+      - tapd_bug#
+      - tapd_task#
+      - tapd_story#
+  refs:
+    actions:
+      - Closes
+      - Fixes
+
+  notes:
+    keywords:
+      - BREAKING CHANGE
