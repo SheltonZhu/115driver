@@ -1,0 +1,43 @@
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  releaser:
+    name: release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 'stable'
+          cache: false
+
+      - name: Get Tag Name
+        id: tag
+        run: echo "tagName=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Generate Changelog
+        id: gen_changelog
+        run: |
+          config=./_dev/config/chglog.config.yml
+          tagName=v${{ steps.tag.outputs.tagName }}
+          go run github.com/git-chglog/git-chglog/cmd/git-chglog@latest --config $config $tagName
+          go run github.com/git-chglog/git-chglog/cmd/git-chglog@latest --config $config $tagName > changelog.md
+
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          bodyFile: changelog.md
+          token: ${{ secrets.GITHUB_TOKEN }}

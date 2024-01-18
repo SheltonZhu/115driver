@@ -1,0 +1,36 @@
+name: main
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  contrib-readme-job:
+    runs-on: ubuntu-latest
+    name: A job to automate contribute list in readme.md
+    steps:
+      - name: Contribute List
+        uses: akhilmhdh/contributors-readme-action@v2.3.6
+        with:
+          # Size of square images in the stack
+          image_size: 100
+          # Path of the readme file you want to update
+          readme_path: "README.md	"
+          # To use github-id instead of profile name
+          use_username: true
+          # Number of columns in a row
+          columns_per_row: 6
+          # Type of collaborators options: all/direct/outside
+          collaborators: all
+          # Commit message of the GitHub action
+          commit_message: "update contributor"
+          # Username on commit
+          committer_username: SheltonZHu
+          # email id of committer
+          committer_email: 498220739@qq.com
+          # check if branch is protected
+          auto_detect_branch_protection: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
