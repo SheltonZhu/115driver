@@ -31,7 +31,7 @@ jobs:
       - name: Generate Changelog
         id: gen_changelog
         run: |
-          config=./_dev/config/chglog.config.yml
+          config=./.chglog/config.yml
           tagName=v${{ steps.tag.outputs.tagName }}
           go run github.com/git-chglog/git-chglog/cmd/git-chglog@latest --config $config $tagName
           go run github.com/git-chglog/git-chglog/cmd/git-chglog@latest --config $config $tagName > changelog.md
