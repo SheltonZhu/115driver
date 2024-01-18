@@ -2,7 +2,7 @@
 
 🖴 A 115 cloud driver package.
 
-[![Goreport](https://goreportcard.com/badge/github.com/SheltonZhu/115driver)](https://goreportcard.com/report/github.com/SheltonZhu/115driver) [![Version](https://img.shields.io/badge/release-v1.0.23-blue)](https://github.com/SheltonZhu/115driver/tags) [![Reference](https://img.shields.io/badge/Go-Reference-red.svg)](https://pkg.go.dev/github.com/SheltonZhu/115driver) [![License](https://img.shields.io/:License-MIT-orange.svg)](https://raw.githubusercontent.com/SheltonZhu/115driver/main/LICENSE)
+[![Goreport](https://goreportcard.com/badge/github.com/SheltonZhu/115driver)](https://goreportcard.com/report/github.com/SheltonZhu/115driver) [![Release](https://img.shields.io/github/release/SheltonZhu/115driver)](https://github.com/SheltonZhu/115driver/releases) [![Reference](https://img.shields.io/badge/Go-Reference-red.svg)](https://pkg.go.dev/github.com/SheltonZhu/115driver) [![License](https://img.shields.io/:License-MIT-orange.svg)](https://raw.githubusercontent.com/SheltonZhu/115driver/main/LICENSE)[![Downloads](https://img.shields.io/github/downloads/SheltonZhu/115driver/total?color=%239F7AEA&logo=github)](https://github.com/SheltonZhu/115driver/releases)
 
 ---
 
