@@ -33,6 +33,10 @@ type File struct {
 	UpdateTime time.Time
 }
 
+func (f *File) From(fileInfo *FileInfo) *File {
+	return f.from(fileInfo)
+}
+
 func (f *File) from(fileInfo *FileInfo) *File {
 	if fileInfo.FileID != "" {
 		f.FileID = fileInfo.FileID
