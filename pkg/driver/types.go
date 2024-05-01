@@ -70,7 +70,7 @@ func (v *IntString) UnmarshalJSON(b []byte) (err error) {
 	if b[0] == '"' {
 		err = json.Unmarshal(b, &s)
 	} else {
-		var i int
+		var i int64
 		if err = json.Unmarshal(b, &i); err == nil {
 			s = strconv.Itoa(i)
 		}
