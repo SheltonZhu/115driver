@@ -72,7 +72,7 @@ func (v *IntString) UnmarshalJSON(b []byte) (err error) {
 	} else {
 		var i int64
 		if err = json.Unmarshal(b, &i); err == nil {
-			s = strconv.Itoa(i)
+			s = strconv.FormatInt(i, 10)
 		}
 	}
 	if err == nil {
