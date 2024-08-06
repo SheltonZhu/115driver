@@ -41,6 +41,39 @@ func teardown(t *testing.T) func(t *testing.T) {
 	return func(t *testing.T) {}
 }
 
+func TestListOfflineTasks(t *testing.T) {
+	down := teardown(t)
+	defer down(t)
+	_, err := client.ListOfflineTask(1)
+	assert.Nil(t, err)
+}
+
+func TestOfflineAddUri(t *testing.T) {
+	down := teardown(t)
+	defer down(t)
+
+	uri := "https://x.com/Olympics/status/1820550228640203065/photo/1"
+	hashs, err := client.AddOfflineTaskURIs([]string{uri}, "0")
+	assert.Nil(t, err)
+	assert.NotEmpty(t, hashs)
+}
+
+func TestOfflineDelUri(t *testing.T) {
+	down := teardown(t)
+	defer down(t)
+
+	err := client.DeleteOfflineTasks([]string{"1123", "1231"}, true)
+	assert.Nil(t, err)
+}
+
+func TestOfflineClearUri(t *testing.T) {
+	down := teardown(t)
+	defer down(t)
+
+	err := client.ClearOfflineTasks(1)
+	assert.Nil(t, err)
+}
+
 func TestMkdir(t *testing.T) {
 	down := teardown(t)
 	defer down(t)

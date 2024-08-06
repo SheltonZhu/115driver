@@ -26,6 +26,7 @@
   * [X] Get Information by ID
   * [X] Stat File
   * [x] Download by share code
+  * [x] Offline Download
 
 ## Example
 

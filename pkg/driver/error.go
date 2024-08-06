@@ -16,6 +16,7 @@ var (
 var (
 	ErrNotLogin = errors.New("user not login")
 
+	ErrOfflineNoTimes     = errors.New("offline download quota has been used up, you can purchase a VIP experience or upgrade to VIP service to get more quota")
 	ErrOfflineInvalidLink = errors.New("invalid download link")
 	ErrOfflineTaskExisted = errors.New("offline task existed")
 
@@ -84,6 +85,7 @@ var (
 		99:     ErrNotLogin,
 		990001: ErrNotLogin,
 		// Offline errors
+		10010: ErrOfflineNoTimes,
 		10004: ErrOfflineInvalidLink,
 		10008: ErrOfflineTaskExisted,
 		// Dir errors
