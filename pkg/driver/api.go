@@ -28,6 +28,12 @@ const (
 	ApiDownloadGetUrl      = "https://proapi.115.com/app/chrome/downurl"
 	ApiDownloadGetShareUrl = "https://proapi.115.com/app/share/downurl"
 
+	// offline download
+	ApiAddOfflineUrl   = "https://lixian.115.com/lixianssp/?ac=add_task_urls"
+	ApiDelOfflineUrl   = "https://lixian.115.com/lixian/?ct=lixian&ac=task_del"
+	ApiListOfflineUrl  = "https://lixian.115.com/lixian/?ct=lixian&ac=task_lists"
+	ApiClearOfflineUrl = "https://lixian.115.com/lixian/?ct=lixian&ac=task_clear"
+
 	// upload
 	ApiUploadInfo        = "https://proapi.115.com/app/uploadinfo"
 	ApiGetUploadEndpoint = "https://uplb.115.com/3.0/getuploadinfo.php"
