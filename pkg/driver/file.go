@@ -42,7 +42,11 @@ func (f *File) from(fileInfo *FileInfo) *File {
 		f.FileID = fileInfo.FileID
 		f.ParentID = string(fileInfo.CategoryID)
 		f.IsDirectory = false
-		loc, _ := time.LoadLocation("Asia/Shanghai") // updatetime is a string without timezone
+		loc, err := time.LoadLocation("Asia/Shanghai") // updatetime is a string without timezone
+		if err != nil {
+			// if missing Asia/Shanghai use CST（UTC+8） 
+			 loc = time.FixedZone("UTC+8", 8*3600)
+		}
 		localTime, err := time.ParseInLocation("2006-01-02 15:04", fileInfo.UpdateTime, loc)
 		if err == nil {
 			f.UpdateTime = time.Unix(localTime.Unix(), 0)
