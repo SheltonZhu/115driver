@@ -27,6 +27,10 @@
   * [X] Stat File
   * [x] Download by share code
   * [x] Offline Download
+* Recycle Bin
+  * [x] List
+  * [x] Revert
+  * [x] Clean
 
 ## Example
 

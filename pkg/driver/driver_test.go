@@ -41,11 +41,32 @@ func teardown(t *testing.T) func(t *testing.T) {
 	return func(t *testing.T) {}
 }
 
+func TestListRecycleBin(t *testing.T) {
+	down := teardown(t)
+	defer down(t)
+	_, err := client.ListRecycleBin(0, 40)
+	assert.Nil(t, err)
+}
+
+func TestCleanRecycleBin(t *testing.T) {
+	down := teardown(t)
+	defer down(t)
+	err := client.CleanRecycleBin("xx", "1", "2")
+	assert.NotNil(t, err)
+}
+
 func TestListOfflineTasks(t *testing.T) {
 	down := teardown(t)
 	defer down(t)
 	_, err := client.ListOfflineTask(1)
 	assert.Nil(t, err)
+}
+
+func TestRevertRecycleBin(t *testing.T) {
+	down := teardown(t)
+	defer down(t)
+	err := client.RevertRecycleBin("xx", "1", "2")
+	assert.NotNil(t, err)
 }
 
 func TestOfflineAddUri(t *testing.T) {
