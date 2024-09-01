@@ -54,11 +54,13 @@ const (
 	LoginAppWeb     LoginApp = "web"
 	LoginAppAndroid LoginApp = "android"
 	LoginAppIOS     LoginApp = "ios"
-	LoginAppLinux   LoginApp = "linux"
-	LoginAppMac     LoginApp = "mac"
-	LoginAppWindows LoginApp = "windows"
-	LoginAppTV      LoginApp = "tv"
-	// LoginAppIPad    LoginApp = "ipad"
+	// LoginAppLinux      LoginApp = "linux"   // disabled
+	// LoginAppMac        LoginApp = "mac"     // disabled
+	// LoginAppWindows    LoginApp = "windows" // disabled
+	LoginAppTV         LoginApp = "tv"
+	LoginAppAlipayMini LoginApp = "alipaymini"
+	LoginAppWechatMini LoginApp = "wechatmini"
+	LoginQAppAndroid   LoginApp = "qandroid"
 )
 
 // QRCodeLoginWithApp logins user through QRCode with specified app.
