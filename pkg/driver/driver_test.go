@@ -36,7 +36,7 @@ func TestLogin(t *testing.T) {
 func teardown(t *testing.T) func(t *testing.T) {
 	cr := &Credential{}
 	assert.Nil(t, cr.FromCookie(cookieStr))
-	client = New(UA(UA115Desktop), WithDebug(), WithTrace()).ImportCredential(cr)
+	client = New(UA(UA115Browser), WithDebug(), WithTrace()).ImportCredential(cr)
 	assert.Nil(t, client.LoginCheck())
 	return func(t *testing.T) {}
 }
