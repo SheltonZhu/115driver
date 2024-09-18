@@ -225,7 +225,7 @@ func (c *Pan115Client) RapidUpload(fileSize int64, fileName, dirID, preID, fileI
 
 	signKey, signVal := "", ""
 	for retry := true; retry; {
-		t := Now()
+		t := NowMilli()
 
 		if encodedToken, err = ecdhCipher.EncodeToken(t.ToInt64()); err != nil {
 			return nil, err
