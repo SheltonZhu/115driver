@@ -356,3 +356,12 @@ func TestShareSnap(t *testing.T) {
 	_, err := client.GetShareSnap("ssw60op83nuc", "test", "")
 	assert.ErrorIs(t, err, ErrSharedNotFound)
 }
+
+func TestGetVersion(t *testing.T) {
+	down := teardown(t)
+	defer down(t)
+
+	vers, err := client.GetAppVersion()
+	assert.NoError(t, err)
+	assert.NotEmpty(t, vers)
+}
