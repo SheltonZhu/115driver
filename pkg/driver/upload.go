@@ -18,8 +18,8 @@ import (
 	"time"
 
 	hash "github.com/SheltonZhu/115driver/pkg/crypto"
+	cipher "github.com/SheltonZhu/115driver/pkg/crypto/ec115"
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
-	"github.com/orzogc/fake115uploader/cipher"
 	"github.com/pkg/errors"
 )
 
