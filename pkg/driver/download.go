@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	crypto "github.com/gaoyb7/115drive-webdav/115"
+	crypto "github.com/SheltonZhu/115driver/pkg/crypto/m115"
 	"github.com/go-resty/resty/v2"
 )
 
