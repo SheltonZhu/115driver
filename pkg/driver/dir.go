@@ -30,8 +30,14 @@ func (c *Pan115Client) List(dirID string) (*[]File, error) {
 	return c.ListWithLimit(dirID, FileListLimit)
 }
 
+const MaxDirPageLimit = 1150
+
 // ListWithLimit list all files and directories with limit
 func (c *Pan115Client) ListWithLimit(dirID string, limit int64) (*[]File, error) {
+	if limit > MaxDirPageLimit {
+		limit = MaxDirPageLimit
+	}
+
 	var files []File
 	offset := int64(0)
 	for {
