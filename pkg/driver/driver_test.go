@@ -365,3 +365,12 @@ func TestGetVersion(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, vers)
 }
+
+func TestGetInfo(t *testing.T) {
+	down := teardown(t)
+	defer down(t)
+
+	info, err := client.GetInfo()
+	assert.NoError(t, err)
+	assert.NotEmpty(t, info.SpaceInfo)
+}
