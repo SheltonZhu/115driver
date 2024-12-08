@@ -47,6 +47,7 @@ func main() {
         UID: "xxx",
         CID: "xxx",
         SEID: "xxx",
+        KID: "xxx",
     }
     // or err := cr.FromCookie(cookieStr)
 

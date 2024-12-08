@@ -22,7 +22,7 @@ func TestMain(m *testing.M) {
 
 func TestImportFromCookie(t *testing.T) {
 	cr := &Credential{}
-	assert.Nil(t, cr.FromCookie("UID=1;CID=2;SEID=3;other=4"))
+	assert.Nil(t, cr.FromCookie("UID=1;CID=2;SEID=3;KID=12;other=4"))
 	assert.Error(t, ErrBadCookie, cr.FromCookie(""))
 	assert.Error(t, ErrBadCookie, cr.FromCookie("k=a;;"))
 	assert.Error(t, ErrBadCookie, cr.FromCookie("1=2;2=3;3=4"))

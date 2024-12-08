@@ -95,7 +95,8 @@ func (cr *Credential) FromCookie(cookie string) error {
 	cr.CID = cookieMap["CID"]
 	cr.SEID = cookieMap["SEID"]
 	cr.KID = cookieMap["KID"]
-	if cr.CID == "" || cr.UID == "" || cr.SEID == "" || cr.KID == "" {
+	// No need to verify the KID for those old cookies that are still available.
+	if cr.CID == "" || cr.UID == "" || cr.SEID == "" {
 		return errors.Wrap(ErrBadCookie, "bad cookie, miss UID, CID or SEID")
 	}
 	return nil
