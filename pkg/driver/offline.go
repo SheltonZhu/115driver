@@ -85,9 +85,11 @@ func (c *Pan115Client) AddOfflineTaskURIs(uris []string, saveDirID string) (hash
 	}
 
 	if c.UserID < 0 {
-		if err := c.LoginCheck(); err != nil {
+		userInfo, err := c.GetUser()
+		if err != nil {
 			return nil, err
 		}
+		c.UserID = userInfo.UserID
 	}
 
 	key := crypto.GenerateKey()

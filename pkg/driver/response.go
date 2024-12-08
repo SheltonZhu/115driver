@@ -235,20 +235,27 @@ type UserInfoResp struct {
 	UserInfo UserInfo `json:"data"`
 }
 type UserInfo struct {
-	Device      int           `json:"device"`
-	Rank        int           `json:"rank"`
-	Liang       int           `json:"liang"`
-	Mark        int           `json:"mark"`
-	Mark1       int           `json:"mark1"`
-	Vip         int           `json:"vip"`
-	Expire      int           `json:"expire"`
-	Global      int           `json:"global"`
-	Forever     int           `json:"forever"`
-	IsPrivilege bool          `json:"is_privilege"`
-	Privilege   []interface{} `json:"privilege"`
-	UserName    string        `json:"user_name"`
-	Face        string        `json:"face"`
-	UserID      int64         `json:"user_id"`
+	Device      int       `json:"device"`
+	Rank        int       `json:"rank"`
+	Liang       int       `json:"liang"`
+	Mark        int       `json:"mark"`
+	Mark1       int       `json:"mark1"`
+	Vip         int       `json:"vip"`
+	Expire      int       `json:"expire"`
+	Global      int       `json:"global"`
+	Forever     int       `json:"forever"`
+	IsPrivilege bool      `json:"is_privilege"`
+	Privilege   Privilege `json:"privilege"`
+	UserName    string    `json:"user_name"`
+	Face        string    `json:"face"`
+	UserID      int64     `json:"user_id"`
+}
+
+type Privilege struct {
+	Start  int  `json:"start"`
+	Expire int  `json:"expire"`
+	State  bool `json:"state"`
+	Mark   int  `json:"mark"`
 }
 
 type FileStatResponse struct {
@@ -387,4 +394,19 @@ type ShareFile struct {
 	// C          int          `json:"c"`
 	// E          string       `json:"e"`
 	// U          string       `json:"u"`
+}
+
+type UploadResult struct {
+	BasicResp
+	Data struct {
+		PickCode string `json:"pick_code"`
+		FileSize int    `json:"file_size"`
+		FileID   string `json:"file_id"`
+		ThumbURL string `json:"thumb_url"`
+		Sha1     string `json:"sha1"`
+		Aid      int    `json:"aid"`
+		FileName string `json:"file_name"`
+		Cid      string `json:"cid"`
+		IsVideo  int    `json:"is_video"`
+	} `json:"data"`
 }

@@ -2,19 +2,19 @@ package driver
 
 const (
 	ApiGetVersion = "https://appversion.115.com/1/web/1.0/api/chrome"
-	
-	// login
-	ApiLoginCheck = "https://passportapi.115.com/app/1.0/web/1.0/check/sso"
-	ApiUserInfo   = "https://my.115.com/?ct=ajax&ac=nav"
 
+	// login
+	ApiLoginCheck  = "https://passportapi.115.com/app/1.0/web/1.0/check/sso"
+	ApiUserInfo    = "https://my.115.com/?ct=ajax&ac=nav"
+	ApiStatusCheck = "https://my.115.com/?ct=guide&ac=status"
 	// dir
 	ApiDirAdd = "https://webapi.115.com/files/add"
 
 	// file
-	ApiFileDelete = "https://webapi.115.com/rb/delete"
-	ApiFileMove   = "https://webapi.115.com/files/move"
-	ApiFileCopy   = "https://webapi.115.com/files/copy"
-	ApiFileRename = "https://webapi.115.com/files/batch_rename"
+	ApiFileDelete    = "https://webapi.115.com/rb/delete"
+	ApiFileMove      = "https://webapi.115.com/files/move"
+	ApiFileCopy      = "https://webapi.115.com/files/copy"
+	ApiFileRename    = "https://webapi.115.com/files/batch_rename"
 	ApiFileIndexInfo = "https://webapi.115.com/files/index_info"
 
 	ApiFileList       = "https://webapi.115.com/files"

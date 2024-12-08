@@ -11,7 +11,6 @@ import (
 	"io"
 	"net/url"
 	"os"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -369,6 +368,7 @@ func (c *Pan115Client) UploadByMultipart(params *UploadOSSParams, fileSize int64
 		ossClient *oss.Client
 		bucket    *oss.Bucket
 		ossToken  *UploadOSSTokenResp
+		bodyBytes []byte
 		err       error
 	)
 
@@ -379,11 +379,18 @@ func (c *Pan115Client) UploadByMultipart(params *UploadOSSParams, fileSize int64
 		}
 	}
 
+	options.ThreadsNum = 1
 	if ossToken, err = c.GetOSSToken(); err != nil {
 		return err
 	}
 
-	if ossClient, err = oss.New(c.getOSSEndpoint(c.UseInternalUpload), ossToken.AccessKeyID, ossToken.AccessKeySecret); err != nil {
+	if ossClient, err = oss.New(
+		c.getOSSEndpoint(c.UseInternalUpload),
+		ossToken.AccessKeyID,
+		ossToken.AccessKeySecret,
+		oss.EnableMD5(true),
+		oss.EnableCRC(true),
+	); err != nil {
 		return err
 	}
 
@@ -404,6 +411,8 @@ func (c *Pan115Client) UploadByMultipart(params *UploadOSSParams, fileSize int64
 	if imur, err = bucket.InitiateMultipartUpload(params.Object,
 		oss.SetHeader(OssSecurityTokenHeaderName, ossToken.SecurityToken),
 		oss.UserAgentHeader(OSSUserAgent),
+		oss.EnableSha1(),
+		oss.Sequential(), // oss 启用Sequential必须按顺序上传, options.ThreadsNum = 1
 	); err != nil {
 		return err
 	}
@@ -447,8 +456,12 @@ func (c *Pan115Client) UploadByMultipart(params *UploadOSSParams, fileSize int64
 						continue
 					}
 
-					b := bytes.NewBuffer(buf)
-					if part, err = bucket.UploadPart(imur, b, chunk.Size, chunk.Number, OssOption(params, ossToken)...); err == nil {
+					if part, err = bucket.UploadPart(
+						imur,
+						bytes.NewBuffer(buf),
+						chunk.Size,
+						chunk.Number,
+						OssOption(params, ossToken)...); err == nil {
 						break
 					}
 				}
@@ -483,14 +496,19 @@ LOOP:
 		}
 	}
 
-	// EOF错误是xml的Unmarshal导致的，响应其实是json格式，所以实际上上传是成功的
-	if _, err = bucket.CompleteMultipartUpload(imur, parts, OssOption(params, ossToken)...); err != nil && !errors.Is(err, io.EOF) {
-		// 当文件名含有 &< 这两个字符之一时响应的xml解析会出现错误，实际上上传是成功的
-		if filename := filepath.Base(f.Name()); !strings.ContainsAny(filename, "&<") {
-			return err
-		}
+	if _, err := bucket.CompleteMultipartUpload(imur, parts,
+		append(
+			OssOption(params, ossToken),
+			oss.CallbackResult(&bodyBytes),
+		)...); err != nil {
+		return err
 	}
-	return c.checkUploadStatus(dirID, params.SHA1)
+
+	var uploadResult UploadResult
+	if err = json.Unmarshal(bodyBytes, &uploadResult); err != nil {
+		return err
+	}
+	return uploadResult.Err(string(bodyBytes))
 }
 
 func chunksProducer(ch chan oss.FileChunk, chunks []oss.FileChunk) {

@@ -7,7 +7,7 @@ import (
 
 func ExamplePan115Client_ImportCredential() {
 	cr := &Credential{}
-	if err := cr.FromCookie("UID=xxx;CID=xxxx;SEID=xxx;other=xxxx"); err != nil {
+	if err := cr.FromCookie("UID=xxx;CID=xxxx;SEID=xxx;KID=xxx;other=xxxx"); err != nil {
 		log.Fatalf("Import credentail error: %s", err)
 	}
 	client := Defalut().ImportCredential(cr)
