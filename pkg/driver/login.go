@@ -1,6 +1,7 @@
 package driver
 
 import (
+	"fmt"
 	"net/http"
 	neturl "net/url"
 	"strings"
@@ -115,6 +116,11 @@ func (cr *Credential) FromCookie(cookie string) error {
 		return errors.Wrap(ErrBadCookie, "bad cookie, miss UID, CID or SEID")
 	}
 	return nil
+}
+
+// Cookie return cookie format
+func (cr *Credential) Cookie() string {
+	return fmt.Sprintf("UID=%s;CID=%s;SEID=%s;KID=%s", cr.UID, cr.CID, cr.SEID, cr.KID)
 }
 
 // GetUser get user information

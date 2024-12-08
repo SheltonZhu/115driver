@@ -347,15 +347,44 @@ func TestQRCodeStartByOtherApp(t *testing.T) {
 	_, err = f.Write(b)
 	assert.Nil(t, err)
 
-	status, err := c.QRCodeStatus(s)
-	assert.Nil(t, err)
+	timer := time.NewTimer(50 * time.Second)
+	defer timer.Stop()
+	ch := make(chan error)
+	go func() {
+		for {
+			status, err := c.QRCodeStatus(s)
+			if err != nil {
+				ch <- err
+			}
 
-	if status.IsAllowed() {
-		_, err = c.QRCodeLoginWithApp(s, LoginAppIOS)
-		assert.Nil(t, err)
-	} else {
-		_, err = c.QRCodeLoginWithApp(s, LoginAppIOS)
-		assert.Error(t, err)
+			switch {
+			case status.IsAllowed():
+				_, err = c.QRCodeLoginWithApp(s, LoginAppIOS)
+				ch <- err
+				return
+			case status.IsCanceled(), status.IsExpired():
+				ch <- nil
+				return
+			case status.IsWaiting(), status.IsScanned():
+				time.Sleep(1 * time.Second)
+			default:
+				_, err = c.QRCodeLoginWithApp(s, LoginAppIOS)
+				ch <- err
+				return
+			}
+		}
+	}()
+
+LOOP:
+	for {
+		select {
+		case <-timer.C:
+			assert.True(t, false, "time out")
+			break LOOP
+		case err := <-ch:
+			assert.NoError(t, err)
+			break LOOP
+		}
 	}
 }
 
