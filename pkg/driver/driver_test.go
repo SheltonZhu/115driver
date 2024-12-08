@@ -29,15 +29,19 @@ func TestImportFromCookie(t *testing.T) {
 	assert.Error(t, ErrBadCookie, cr.FromCookie("1=2;2=3;3=4"))
 }
 
-func TestLogin(t *testing.T) {
+func TestLoginErr(t *testing.T) {
 	assert.Error(t, New().ImportCredential(&Credential{}).LoginCheck())
+}
+
+func TestBadCookie(t *testing.T) {
+	assert.Error(t, New().ImportCredential(&Credential{}).CookieCheck())
 }
 
 func teardown(t *testing.T) func(t *testing.T) {
 	cr := &Credential{}
 	assert.Nil(t, cr.FromCookie(cookieStr))
 	client = New(UA(UA115Browser), WithDebug(), WithTrace()).ImportCredential(cr)
-	assert.Nil(t, client.LoginCheck())
+	assert.Nil(t, client.CookieCheck())
 	return func(t *testing.T) {}
 }
 

@@ -8,7 +8,22 @@ import (
 	"github.com/pkg/errors"
 )
 
-// LoginCheck check login status
+// CookieCheck checks the cookie status and will not logout of other devices.
+func (c *Pan115Client) CookieCheck() error {
+	result := struct {
+		State bool `json:"state"`
+	}{}
+	req := c.NewRequest().
+		SetQueryParam("_", NowMilli().String()).
+		SetResult(&result)
+
+	if _, _ = req.Get(ApiStatusCheck); !result.State {
+		return ErrBadCookie
+	}
+	return nil
+}
+
+// LoginCheck checks the login status and will logout of other devices.
 func (c *Pan115Client) LoginCheck() error {
 	result := LoginResp{}
 	req := c.NewRequest().
