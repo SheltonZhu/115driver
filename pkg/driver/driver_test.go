@@ -249,8 +249,14 @@ func TestUploadMultipart(t *testing.T) {
 	assert.Nil(t, err)
 
 	randStr := NowMilli().String()
-	_, err = f.WriteString(randStr)
-	assert.Nil(t, err)
+	targetSize := 2048 // 目标文件大小，单位字节，这里设置为2KB
+	currentSize := 0
+	for currentSize < targetSize {
+		// 获取当前时间的毫秒时间戳字符串作为随机内容的一部分
+		n, err := f.WriteString(randStr)
+		assert.Nil(t, err)
+		currentSize += n
+	}
 
 	_, err = f.Seek(0, io.SeekStart)
 	assert.Nil(t, err)

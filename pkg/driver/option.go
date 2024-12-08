@@ -1,11 +1,10 @@
 package driver
 
 import (
+	"crypto/tls"
 	"net/http"
 	"strconv"
 	"time"
-
-	"crypto/tls"
 
 	"github.com/go-resty/resty/v2"
 )
@@ -153,7 +152,8 @@ type UploadMultipartOptions struct {
 
 func DefalutUploadMultipartOptions() *UploadMultipartOptions {
 	return &UploadMultipartOptions{
-		ThreadsNum:       10,
+		// oss 启用Sequential必须按顺序上传
+		ThreadsNum:       1,
 		Timeout:          time.Hour * 24,
 		TokenRefreshTime: time.Minute * 50,
 	}

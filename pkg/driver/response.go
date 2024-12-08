@@ -388,3 +388,18 @@ type ShareFile struct {
 	// E          string       `json:"e"`
 	// U          string       `json:"u"`
 }
+
+type UploadResult struct {
+	BasicResp
+	Data struct {
+		PickCode string `json:"pick_code"`
+		FileSize int    `json:"file_size"`
+		FileID   string `json:"file_id"`
+		ThumbURL string `json:"thumb_url"`
+		Sha1     string `json:"sha1"`
+		Aid      int    `json:"aid"`
+		FileName string `json:"file_name"`
+		Cid      string `json:"cid"`
+		IsVideo  int    `json:"is_video"`
+	} `json:"data"`
+}
