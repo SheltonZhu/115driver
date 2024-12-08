@@ -235,20 +235,27 @@ type UserInfoResp struct {
 	UserInfo UserInfo `json:"data"`
 }
 type UserInfo struct {
-	Device      int           `json:"device"`
-	Rank        int           `json:"rank"`
-	Liang       int           `json:"liang"`
-	Mark        int           `json:"mark"`
-	Mark1       int           `json:"mark1"`
-	Vip         int           `json:"vip"`
-	Expire      int           `json:"expire"`
-	Global      int           `json:"global"`
-	Forever     int           `json:"forever"`
-	IsPrivilege bool          `json:"is_privilege"`
-	Privilege   []interface{} `json:"privilege"`
-	UserName    string        `json:"user_name"`
-	Face        string        `json:"face"`
-	UserID      int64         `json:"user_id"`
+	Device      int       `json:"device"`
+	Rank        int       `json:"rank"`
+	Liang       int       `json:"liang"`
+	Mark        int       `json:"mark"`
+	Mark1       int       `json:"mark1"`
+	Vip         int       `json:"vip"`
+	Expire      int       `json:"expire"`
+	Global      int       `json:"global"`
+	Forever     int       `json:"forever"`
+	IsPrivilege bool      `json:"is_privilege"`
+	Privilege   Privilege `json:"privilege"`
+	UserName    string    `json:"user_name"`
+	Face        string    `json:"face"`
+	UserID      int64     `json:"user_id"`
+}
+
+type Privilege struct {
+	Start  int  `json:"start"`
+	Expire int  `json:"expire"`
+	State  bool `json:"state"`
+	Mark   int  `json:"mark"`
 }
 
 type FileStatResponse struct {
