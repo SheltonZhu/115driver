@@ -81,6 +81,53 @@ func (c *Pan115Client) DownloadWithUA(pickCode, ua string) (*DownloadInfo, error
 	return nil, ErrUnexpected
 }
 
+// DownloadWithUAByAndroidAPI get download info with pickcode and user agent
+func (c *Pan115Client) DownloadWithUAByAndroidAPI(pickCode string, ua string) (*DownloadInfo, error) {
+	key := crypto.GenerateKey()
+
+	result := DownloadResp{}
+	params, err := json.Marshal(map[string]string{"pick_code": pickCode})
+	if err != nil {
+		return nil, err
+	}
+
+	data := crypto.Encode(params, key)
+	req := c.NewRequest().
+		SetQueryParam("t", Now().String()).
+		SetFormData(map[string]string{"data": data}).
+		ForceContentType("application/json").
+		SetResult(&result)
+	if len(ua) > 0 {
+		req = req.SetHeader("User-Agent", ua)
+	}
+	resp, err := req.Post(AndroidApiDownloadGetUrl)
+
+	if err := CheckErr(err, &result, resp); err != nil {
+		return nil, err
+	}
+	bytes, err := crypto.Decode(string(result.EncodedData), key)
+	if err != nil {
+		return nil, err
+	}
+
+	infoResp := struct {
+		URL string `json:"url"`
+	}{}
+	if err := json.Unmarshal(bytes, &infoResp); err != nil {
+		return nil, err
+	}
+
+	info := DownloadInfo{
+		Url: FileDownloadUrl{
+			Url: infoResp.URL,
+		},
+		PickCode: pickCode,
+		Header:   resp.Request.Header,
+	}
+
+	return &info, nil
+}
+
 // Download get download info with pickcode
 func (c *Pan115Client) Download(pickCode string) (*DownloadInfo, error) {
 	return c.DownloadWithUA(pickCode, "")

@@ -27,8 +27,9 @@ const (
 	ApiShareSnap = "https://webapi.115.com/share/snap"
 
 	// download
-	ApiDownloadGetUrl      = "https://proapi.115.com/app/chrome/downurl"
-	ApiDownloadGetShareUrl = "https://proapi.115.com/app/share/downurl"
+	ApiDownloadGetUrl        = "https://proapi.115.com/app/chrome/downurl"
+	ApiDownloadGetShareUrl   = "https://proapi.115.com/app/share/downurl"
+	AndroidApiDownloadGetUrl = "https://proapi.115.com/android/2.0/ufile/download"
 
 	// offline download
 	ApiAddOfflineUrl   = "https://lixian.115.com/lixianssp/?ac=add_task_urls"
