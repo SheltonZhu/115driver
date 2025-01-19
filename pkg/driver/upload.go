@@ -279,7 +279,7 @@ func (c *Pan115Client) RapidUpload(fileSize int64, fileName, dirID, preID, fileI
 
 const (
 	md5Salt = "Qclm8MGWUv59TnrR0XPg"
-	appVer  = "27.0.3.7"
+	appVer  = "27.0.5.7"
 )
 
 func (c *Pan115Client) UploadDigestRange(r io.ReadSeeker, rangeSpec string) (result string, err error) {
