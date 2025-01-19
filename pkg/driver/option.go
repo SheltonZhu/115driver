@@ -219,3 +219,21 @@ func WithMultiUrls() ListOption {
 		ApiFileList3,
 	}...)
 }
+
+type OfflineOptions struct {
+	appVer string
+}
+
+func DefaultOfflineOptions() OfflineOptions {
+	return OfflineOptions{
+		appVer: appVer,
+	}
+}
+
+type OfflineOption func(o *OfflineOptions)
+
+func WithAppVer(appVer string) OfflineOption {
+	return func(o *OfflineOptions) {
+		o.appVer = appVer
+	}
+}
