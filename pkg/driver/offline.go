@@ -78,13 +78,18 @@ func (c *Pan115Client) ListOfflineTask(page int64) (OfflineTaskResp, error) {
 
 // AddOfflineTaskURIs adds offline tasks by download URIs.
 // supports http, ed2k, magent
-func (c *Pan115Client) AddOfflineTaskURIs(uris []string, saveDirID string) (hashes []string, err error) {
+func (c *Pan115Client) AddOfflineTaskURIs(uris []string, saveDirID string, opts ...OfflineOption) (hashes []string, err error) {
+	opt := DefaultOfflineOptions()
+
+	for _, o := range opts {
+		o(&opt)
+	}
 	count := len(uris)
 	if count == 0 {
 		return
 	}
 
-	if c.UserID < 0 {
+	if c.UserID <= 0 {
 		userInfo, err := c.GetUser()
 		if err != nil {
 			return nil, err
@@ -99,7 +104,7 @@ func (c *Pan115Client) AddOfflineTaskURIs(uris []string, saveDirID string) (hash
 	params := map[string]string{
 		"ac":         "add_task_urls",
 		"wp_path_id": saveDirID,
-		"app_ver":    appVer,
+		"app_ver":    opt.appVer,
 		"uid":        strconv.FormatInt(c.UserID, 10),
 	}
 	for i, uri := range uris {

@@ -102,6 +102,9 @@ func (c *Pan115Client) ListPage(dirID string, offset, limit int64, opts ...ListO
 }
 
 func GetFiles(req *resty.Request, dirID string, opts ...GetFileOptions) (*FileListResp, error) {
+	if dirID == "" {
+		dirID = "0"
+	}
 	o := DefaultGetFileOptions()
 	if len(opts) > 0 {
 		for _, opt := range opts {
