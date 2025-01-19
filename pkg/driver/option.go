@@ -210,3 +210,12 @@ func WithApiURLs(urls ...string) ListOption {
 		}
 	}
 }
+
+func WithMultiUrls() ListOption {
+	return WithApiURLs([]string{
+		ApiFileList,
+		ApiFileList1,
+		ApiFileList2,
+		ApiFileList3,
+	}...)
+}
