@@ -74,9 +74,16 @@ type GetFileOption struct {
 	pageSize int64
 	offset   int64
 	showDir  string
+	apiURL   string
 }
 
 type GetFileOptions func(o *GetFileOption)
+
+func WithApiURL(url string) GetFileOptions {
+	return func(o *GetFileOption) {
+		o.apiURL = url
+	}
+}
 
 func WithLimit(pageSize int64) GetFileOptions {
 	return func(o *GetFileOption) {
@@ -114,6 +121,10 @@ func WithAsc(d bool) GetFileOptions {
 	}
 }
 
+func (o *GetFileOption) GetApiURL() string {
+	return o.apiURL
+}
+
 func (o *GetFileOption) GetOrder() string {
 	return o.order
 }
@@ -141,6 +152,7 @@ func DefaultGetFileOptions() *GetFileOption {
 		pageSize: int64(56),
 		offset:   int64(0),
 		showDir:  "1",
+		apiURL:   ApiFileList,
 	}
 }
 
@@ -176,5 +188,25 @@ func UploadMultipartWithTimeout(timeout time.Duration) UploadMultipartOption {
 func UploadMultipartWithTokenRefreshTime(refreshTime time.Duration) UploadMultipartOption {
 	return func(o *UploadMultipartOptions) {
 		o.TokenRefreshTime = refreshTime
+	}
+}
+
+type ListOptions struct {
+	ApiURLs []string
+}
+
+func DefaultListOptions() *ListOptions {
+	return &ListOptions{
+		ApiURLs: []string{ApiFileList},
+	}
+}
+
+type ListOption func(o *ListOptions)
+
+func WithApiURLs(urls ...string) ListOption {
+	return func(o *ListOptions) {
+		if len(urls) > 0 {
+			o.ApiURLs = urls
+		}
 	}
 }
