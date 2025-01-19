@@ -146,11 +146,24 @@ func TestList(t *testing.T) {
 	down := teardown(t)
 	defer down(t)
 
-	f, err := client.List("0")
-	assert.NotEmpty(t, *f)
+	f1, err := client.List("0", WithApiURLs(ApiFileList))
+	assert.NotEmpty(t, *f1)
 	assert.Nil(t, err)
+	f2, err := client.List("0", WithApiURLs(ApiFileList1))
+	assert.NotEmpty(t, *f2)
+	assert.Nil(t, err)
+	f3, err := client.List("0", WithApiURLs(ApiFileList2))
+	assert.NotEmpty(t, *f3)
+	assert.Nil(t, err)
+	f4, err := client.List("0", WithApiURLs(ApiFileList3))
+	assert.NotEmpty(t, *f4)
+	assert.Nil(t, err)
+	
+	assert.Equal(t, *f1, *f2)
+	assert.Equal(t, *f1, *f3)
+	assert.Equal(t, *f1, *f4)
 	dirName := NowMilli().String()
-	f, err = client.List(dirName)
+	f, err := client.List(dirName)
 	assert.Nil(t, err)
 	assert.Empty(t, *f)
 }
@@ -347,15 +360,44 @@ func TestQRCodeStartByOtherApp(t *testing.T) {
 	_, err = f.Write(b)
 	assert.Nil(t, err)
 
-	status, err := c.QRCodeStatus(s)
-	assert.Nil(t, err)
+	timer := time.NewTimer(50 * time.Second)
+	defer timer.Stop()
+	ch := make(chan error)
+	go func() {
+		for {
+			status, err := c.QRCodeStatus(s)
+			if err != nil {
+				ch <- err
+			}
 
-	if status.IsAllowed() {
-		_, err = c.QRCodeLoginWithApp(s, LoginAppIOS)
-		assert.Nil(t, err)
-	} else {
-		_, err = c.QRCodeLoginWithApp(s, LoginAppIOS)
-		assert.Error(t, err)
+			switch {
+			case status.IsAllowed():
+				_, err = c.QRCodeLoginWithApp(s, LoginAppIOS)
+				ch <- err
+				return
+			case status.IsCanceled(), status.IsExpired():
+				ch <- nil
+				return
+			case status.IsWaiting(), status.IsScanned():
+				time.Sleep(1 * time.Second)
+			default:
+				_, err = c.QRCodeLoginWithApp(s, LoginAppIOS)
+				ch <- err
+				return
+			}
+		}
+	}()
+
+LOOP:
+	for {
+		select {
+		case <-timer.C:
+			assert.True(t, false, "time out")
+			break LOOP
+		case err := <-ch:
+			assert.NoError(t, err)
+			break LOOP
+		}
 	}
 }
 

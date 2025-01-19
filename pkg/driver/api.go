@@ -18,6 +18,9 @@ const (
 	ApiFileIndexInfo = "https://webapi.115.com/files/index_info"
 
 	ApiFileList       = "https://webapi.115.com/files"
+	ApiFileList1       = "http://web.api.115.com/files"
+	ApiFileList2       = "http://anxia.com/webapi/files"
+	ApiFileList3       = "http://v.anxia.com/webapi/files"
 	ApiFileListByName = "https://aps.115.com/natsort/files.php"
 
 	ApiFileStat = "https://webapi.115.com/category/get"
@@ -27,8 +30,9 @@ const (
 	ApiShareSnap = "https://webapi.115.com/share/snap"
 
 	// download
-	ApiDownloadGetUrl      = "https://proapi.115.com/app/chrome/downurl"
-	ApiDownloadGetShareUrl = "https://proapi.115.com/app/share/downurl"
+	ApiDownloadGetUrl        = "https://proapi.115.com/app/chrome/downurl"
+	ApiDownloadGetShareUrl   = "https://proapi.115.com/app/share/downurl"
+	AndroidApiDownloadGetUrl = "https://proapi.115.com/android/2.0/ufile/download"
 
 	// offline download
 	ApiAddOfflineUrl   = "https://lixian.115.com/lixianssp/?ac=add_task_urls"

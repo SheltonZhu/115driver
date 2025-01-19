@@ -106,10 +106,10 @@ var (
 		40100000: ErrWrongParams,
 		40101030: ErrAccountNotBindMobile,
 		40101032: ErrCredentialInvalid,
+		40101033: ErrRepeatLogin,
 		40101035: ErrDoesLoggedOut,
 		40101037: ErrSessionExited,
 		40101038: ErrRepeatLogin,
-
 		// QRCode errors
 		40199002: ErrQrcodeExpired,
 		// Params errors
