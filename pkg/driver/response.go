@@ -252,10 +252,10 @@ type UserInfo struct {
 }
 
 type Privilege struct {
-	Start  int  `json:"start"`
-	Expire int  `json:"expire"`
-	State  bool `json:"state"`
-	Mark   int  `json:"mark"`
+	Start  int       `json:"start"`
+	Expire int       `json:"expire"`
+	State  bool      `json:"state"`
+	Mark   StringInt `json:"mark"`
 }
 
 type FileStatResponse struct {
