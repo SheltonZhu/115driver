@@ -19,7 +19,8 @@ func (c *Pan115Client) GetAppVersion() ([]AppVersion, error) {
 
 type VersionResp struct {
 	BasicResp
-	Data Versions `json:"data"`
+	ErrCode int      `json:"err_code,omitempty"`
+	Data    Versions `json:"data"`
 }
 
 type Versions map[string]map[string]any
@@ -33,6 +34,16 @@ func (v Versions) GetAppVersions() []AppVersion {
 		})
 	}
 	return vers
+}
+
+func (resp *VersionResp) Err(respBody ...string) error {
+	if resp.State {
+		return nil
+	}
+	if len(respBody) > 0 {
+		return GetErr(resp.ErrCode, respBody[0])
+	}
+	return GetErr(resp.ErrCode)
 }
 
 type AppVersion struct {
