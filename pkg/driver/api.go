@@ -9,6 +9,7 @@ const (
 	ApiStatusCheck = "https://my.115.com/?ct=guide&ac=status"
 	// dir
 	ApiDirAdd = "https://webapi.115.com/files/add"
+	ApiDirName2CID = "https://webapi.115.com/files/getid"
 
 	// file
 	ApiFileDelete    = "https://webapi.115.com/rb/delete"
