@@ -410,3 +410,8 @@ type UploadResult struct {
 		IsVideo  int    `json:"is_video"`
 	} `json:"data"`
 }
+type APIGetDirIDResp struct {
+	BasicResp
+	CategoryID IntString `json:"id"`
+	IsPrivate  IntString `json:"is_private"`
+}
