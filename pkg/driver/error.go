@@ -74,6 +74,8 @@ var (
 
 	ErrSharedNotFound = errors.New("shared link not found")
 
+	ErrSharedExceedLimitation = errors.New("shared exceed receive limitation")
+
 	ErrPickCodeIsEmpty = errors.New("empty pickcode")
 
 	ErrUploadSH1Invalid = errors.New("userid/filesize/target/pickcode/ invalid")
@@ -119,6 +121,7 @@ var (
 		// share
 		4100009: ErrSharedInvalid,
 		4100026: ErrSharedNotFound,
+		4100068: ErrSharedExceedLimitation,
 		// pickCode
 		50003: ErrPickCodeNotExist,
 		50001: ErrPickCodeIsEmpty,
