@@ -152,20 +152,29 @@ func TestList(t *testing.T) {
 	f2, err := client.List("0", WithApiURLs(ApiFileList1))
 	assert.NotEmpty(t, *f2)
 	assert.Nil(t, err)
-	f3, err := client.List("0", WithApiURLs(ApiFileList2))
-	assert.NotEmpty(t, *f3)
-	assert.Nil(t, err)
-	f4, err := client.List("0", WithApiURLs(ApiFileList3))
-	assert.NotEmpty(t, *f4)
-	assert.Nil(t, err)
-	
+	// f3, err := client.List("0", WithApiURLs(ApiFileList2))
+	// assert.NotEmpty(t, *f3)
+	// assert.Nil(t, err)
+	// f4, err := client.List("0", WithApiURLs(ApiFileList3))
+	// assert.NotEmpty(t, *f4)
+	// assert.Nil(t, err)
+
 	assert.Equal(t, *f1, *f2)
-	assert.Equal(t, *f1, *f3)
-	assert.Equal(t, *f1, *f4)
+	// assert.Equal(t, *f1, *f3)
+	// assert.Equal(t, *f1, *f4)
 	dirName := NowMilli().String()
 	f, err := client.List(dirName)
 	assert.Nil(t, err)
 	assert.Empty(t, *f)
+}
+
+func TestDirName2CID(t *testing.T) {
+	down := teardown(t)
+	defer down(t)
+
+	cid, err := client.DirName2CID("Pay")
+	assert.NotEmpty(t, cid)
+	assert.Nil(t, err)
 }
 
 func TestListPage(t *testing.T) {

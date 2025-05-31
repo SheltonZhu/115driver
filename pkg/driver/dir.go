@@ -1,6 +1,8 @@
 package driver
 
 import (
+	"strings"
+
 	"github.com/go-resty/resty/v2"
 )
 
@@ -134,6 +136,18 @@ func GetFiles(req *resty.Request, dirID string, opts ...GetFileOptions) (*FileLi
 	}
 	if dirID != string(result.CategoryID) {
 		return &FileListResp{}, err
+	}
+	return &result, err
+}
+
+func (c *Pan115Client) DirName2CID(dir string) (*APIGetDirIDResp, error) {
+	result := APIGetDirIDResp{}
+	dir = strings.TrimPrefix(dir, "/")
+	req := c.NewRequest().ForceContentType("application/json;charset=UTF-8")
+	req.SetQueryParam("path", dir).SetResult(&result)
+	resp, err := req.Get(ApiDirName2CID)
+	if err = CheckErr(err, &result, resp); err != nil {
+		return nil, err
 	}
 	return &result, err
 }

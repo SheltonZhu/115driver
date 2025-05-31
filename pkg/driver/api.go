@@ -9,6 +9,7 @@ const (
 	ApiStatusCheck = "https://my.115.com/?ct=guide&ac=status"
 	// dir
 	ApiDirAdd = "https://webapi.115.com/files/add"
+	ApiDirName2CID = "https://webapi.115.com/files/getid"
 
 	// file
 	ApiFileDelete    = "https://webapi.115.com/rb/delete"
@@ -19,8 +20,8 @@ const (
 
 	ApiFileList       = "https://webapi.115.com/files"
 	ApiFileList1       = "http://web.api.115.com/files"
-	ApiFileList2       = "http://anxia.com/webapi/files"
-	ApiFileList3       = "http://v.anxia.com/webapi/files"
+	// ApiFileList2       = "http://anxia.com/webapi/files"
+	// ApiFileList3       = "http://v.anxia.com/webapi/files"
 	ApiFileListByName = "https://aps.115.com/natsort/files.php"
 
 	ApiFileStat = "https://webapi.115.com/category/get"
