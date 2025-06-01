@@ -155,7 +155,9 @@ func CheckErr(err error, result ResultWithErr, restyResp *resty.Response) error 
 		var data map[string]interface{}
 		_ = json.Unmarshal([]byte(restyResp.String()), &data)
 		if value, exists := data["error"]; exists {
-			err = errors.New(value.(string))
+			if len(value.(string)) > 0 {
+				err = errors.New(value.(string))
+			}
 		} else {
 			err = result.Err(restyResp.String())
 		}
