@@ -1,6 +1,7 @@
 package driver
 
 import (
+	"encoding/json"
 	"strconv"
 	"strings"
 
@@ -151,7 +152,13 @@ type ResultWithErr interface {
 
 func CheckErr(err error, result ResultWithErr, restyResp *resty.Response) error {
 	if err == nil {
-		err = result.Err(restyResp.String())
+		var data map[string]interface{}
+		_ = json.Unmarshal([]byte(restyResp.String()), &data)
+		if value, exists := data["error"]; exists {
+			err = errors.New(value.(string))
+		} else {
+			err = result.Err(restyResp.String())
+		}
 	}
 	if err != nil {
 		return err
