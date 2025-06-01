@@ -16,10 +16,10 @@ import (
 	"sync"
 	"time"
 
-	hash "github.com/SheltonZhu/115driver/pkg/crypto"
-	cipher "github.com/SheltonZhu/115driver/pkg/crypto/ec115"
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"github.com/pkg/errors"
+	hash "github.com/power721/115driver/pkg/crypto"
+	cipher "github.com/power721/115driver/pkg/crypto/ec115"
 )
 
 // GetDigestResult get digest of file or stream
@@ -222,7 +222,7 @@ func (c *Pan115Client) RapidUpload(fileSize int64, fileName, dirID, preID, fileI
 	form.Set("target", target)
 	form.Set("sig", c.GenerateSignature(fileID, target))
 	form.Set("topupload", "true")
-	
+
 	signKey, signVal := "", ""
 	for retry := true; retry; {
 		t := NowMilli()

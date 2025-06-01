@@ -6,8 +6,8 @@ import (
 	"io"
 	"net/http"
 
-	crypto "github.com/SheltonZhu/115driver/pkg/crypto/m115"
 	"github.com/go-resty/resty/v2"
+	crypto "github.com/power721/115driver/pkg/crypto/m115"
 )
 
 type FileDownloadUrl struct {

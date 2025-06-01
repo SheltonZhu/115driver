@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"strconv"
 
-	crypto "github.com/SheltonZhu/115driver/pkg/crypto/m115"
+	crypto "github.com/power721/115driver/pkg/crypto/m115"
 )
 
 // OfflineTask describe an offline downloading task.
