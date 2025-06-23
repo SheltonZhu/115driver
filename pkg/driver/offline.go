@@ -63,6 +63,9 @@ func (t *OfflineTask) GetStatus() string {
 // ListOfflineTask list tasks
 func (c *Pan115Client) ListOfflineTask(page int64) (OfflineTaskResp, error) {
 	result := OfflineTaskResp{}
+	if isCalledByAlistV3() {
+		return result, ErrorNotSupportAlist
+	}
 	req := c.NewRequest().
 		SetQueryParam("page", strconv.FormatInt(page, 10)).
 		SetResult(&result).
@@ -79,6 +82,9 @@ func (c *Pan115Client) ListOfflineTask(page int64) (OfflineTaskResp, error) {
 // AddOfflineTaskURIs adds offline tasks by download URIs.
 // supports http, ed2k, magent
 func (c *Pan115Client) AddOfflineTaskURIs(uris []string, saveDirID string, opts ...OfflineOption) (hashes []string, err error) {
+	if isCalledByAlistV3() {
+		return nil, ErrorNotSupportAlist
+	}
 	opt := DefaultOfflineOptions()
 
 	for _, o := range opts {
@@ -148,6 +154,9 @@ func (c *Pan115Client) AddOfflineTaskURIs(uris []string, saveDirID string, opts 
 
 // DeleteOfflineTasks deletes tasks.
 func (c *Pan115Client) DeleteOfflineTasks(hashes []string, deleteFiles bool) error {
+	if isCalledByAlistV3() {
+		return ErrorNotSupportAlist
+	}
 	form := url.Values{}
 	for _, hash := range hashes {
 		form.Add("hash", hash)

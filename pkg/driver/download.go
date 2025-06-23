@@ -147,6 +147,9 @@ type SharedDownloadInfo struct {
 
 // DownloadByShareCode get download info with share code
 func (c *Pan115Client) DownloadByShareCode(shareCode, receiveCode, fileID string) (*SharedDownloadInfo, error) {
+	if isCalledByAlistV3() {
+		return nil, ErrorNotSupportAlist
+	}
 	key := crypto.GenerateKey()
 
 	result := DownloadResp{}

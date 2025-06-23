@@ -36,6 +36,9 @@ const MaxDirPageLimit = 1150
 
 // ListWithLimit list all files and directories with limit
 func (c *Pan115Client) ListWithLimit(dirID string, limit int64, opts ...ListOption) (*[]File, error) {
+	if isCalledByAlistV3() {
+		return nil, ErrorNotSupportAlist
+	}
 	if limit > MaxDirPageLimit {
 		limit = MaxDirPageLimit
 	}
