@@ -5,7 +5,7 @@ func (c *Pan115Client) GetInfo() (InfoData, error) {
 	result := InfoResponse{}
 	req := c.NewRequest().
 		SetResult(&result).
-		ForceContentType("application/json;charset=UTF-8")
+		SetForceResponseContentType("application/json;charset=UTF-8")
 
 	resp, err := req.Get(ApiFileIndexInfo)
 

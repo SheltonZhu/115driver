@@ -3,7 +3,7 @@ package driver
 import (
 	"net/http"
 
-	"github.com/go-resty/resty/v2"
+	"resty.dev/v3"
 )
 
 // Pan115Client driver client

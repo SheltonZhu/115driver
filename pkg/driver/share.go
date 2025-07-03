@@ -40,7 +40,7 @@ func (c *Pan115Client) GetShareSnap(shareCode, receiveCode, dirID string, Querie
 
 	req := c.NewRequest().
 		SetQueryParams(query).
-		ForceContentType("application/json;charset=UTF-8").
+		SetForceResponseContentType("application/json;charset=UTF-8").
 		SetResult(&result)
 	resp, err := req.Get(ApiShareSnap)
 	if err := CheckErr(err, &result, resp); err != nil {

@@ -69,7 +69,7 @@ func (c *Pan115Client) ListOfflineTask(page int64) (OfflineTaskResp, error) {
 	req := c.NewRequest().
 		SetQueryParam("page", strconv.FormatInt(page, 10)).
 		SetResult(&result).
-		ForceContentType("application/json;charset=UTF-8")
+		SetForceResponseContentType("application/json;charset=UTF-8")
 
 	resp, err := req.Post(ApiListOfflineUrl)
 
@@ -126,7 +126,7 @@ func (c *Pan115Client) AddOfflineTaskURIs(uris []string, saveDirID string, opts 
 	req := c.NewRequest().
 		SetQueryParam("t", Now().String()).
 		SetFormData(map[string]string{"data": data}).
-		ForceContentType("application/json").
+		SetForceResponseContentType("application/json").
 		SetResult(&result)
 
 	resp, err := req.Post(ApiAddOfflineUrl)
@@ -171,7 +171,7 @@ func (c *Pan115Client) DeleteOfflineTasks(hashes []string, deleteFiles bool) err
 	req := c.NewRequest().
 		SetFormDataFromValues(form).
 		SetResult(&result).
-		ForceContentType("application/json;charset=UTF-8")
+		SetForceResponseContentType("application/json;charset=UTF-8")
 
 	resp, err := req.Post(ApiDelOfflineUrl)
 	return CheckErr(err, &result, resp)
@@ -186,7 +186,7 @@ func (c *Pan115Client) ClearOfflineTasks(clearFlag int64) error {
 	req := c.NewRequest().
 		SetFormDataFromValues(form).
 		SetResult(&result).
-		ForceContentType("application/json;charset=UTF-8")
+		SetForceResponseContentType("application/json;charset=UTF-8")
 
 	resp, err := req.Post(ApiClearOfflineUrl)
 	return CheckErr(err, &result, resp)

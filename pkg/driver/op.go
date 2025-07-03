@@ -20,7 +20,7 @@ func (c *Pan115Client) Delete(fileIDs ...string) error {
 	result := BasicResp{}
 	req := c.NewRequest().
 		SetFormData(form).
-		ForceContentType("application/json;charset=UTF-8").
+		SetForceResponseContentType("application/json;charset=UTF-8").
 		SetResult(&result)
 	resp, err := req.Post(ApiFileDelete)
 	return CheckErr(err, &result, resp)
@@ -40,7 +40,7 @@ func (c *Pan115Client) Rename(fileID, newName string) error {
 	result := BasicResp{}
 	req := c.NewRequest().
 		SetFormData(form).
-		ForceContentType("application/json;charset=UTF-8").
+		SetForceResponseContentType("application/json;charset=UTF-8").
 		SetResult(&result)
 	resp, err := req.Post(ApiFileRename)
 	return CheckErr(err, &result, resp)
@@ -64,7 +64,7 @@ func (c *Pan115Client) Move(dirID string, fileIDs ...string) error {
 	result := BasicResp{}
 	req := c.NewRequest().
 		SetFormData(form).
-		ForceContentType("application/json;charset=UTF-8").
+		SetForceResponseContentType("application/json;charset=UTF-8").
 		SetResult(&result)
 	resp, err := req.Post(ApiFileMove)
 	return CheckErr(err, &result, resp)
@@ -88,7 +88,7 @@ func (c *Pan115Client) Copy(dirID string, fileIDs ...string) error {
 	result := BasicResp{}
 	req := c.NewRequest().
 		SetFormData(form).
-		ForceContentType("application/json;charset=UTF-8").
+		SetForceResponseContentType("application/json;charset=UTF-8").
 		SetResult(&result)
 	resp, err := req.Post(ApiFileCopy)
 	return CheckErr(err, &result, resp)
@@ -132,7 +132,7 @@ func (c *Pan115Client) Stat(fileID string) (*FileStatInfo, error) {
 	result := FileStatResponse{}
 	req := c.NewRequest().
 		SetQueryParam("cid", fileID).
-		ForceContentType("application/json;charset=UTF-8").
+		SetForceResponseContentType("application/json;charset=UTF-8").
 		SetResult(&result)
 	resp, err := req.Get(ApiFileStat)
 	if err := CheckErr(err, &result, resp); err != nil {
@@ -168,7 +168,7 @@ func (c *Pan115Client) GetFile(fileID string) (*File, error) {
 	result := GetFileInfoResponse{}
 	req := c.NewRequest().
 		SetQueryParam("file_id", fileID).
-		ForceContentType("application/json;charset=UTF-8").
+		SetForceResponseContentType("application/json;charset=UTF-8").
 		SetResult(&result)
 	resp, err := req.Get(ApiFileInfo)
 	if err := CheckErr(err, &result, resp); err != nil {

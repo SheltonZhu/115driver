@@ -5,7 +5,7 @@ func (c *Pan115Client) GetAppVersion() ([]AppVersion, error) {
 	result := VersionResp{}
 	req := c.NewRequest().
 		SetResult(&result).
-		ForceContentType("application/json;charset=UTF-8")
+		SetForceResponseContentType("application/json;charset=UTF-8")
 
 	resp, err := req.Get(ApiGetVersion)
 

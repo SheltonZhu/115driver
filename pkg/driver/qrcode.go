@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/go-resty/resty/v2"
 	qrcode "github.com/skip2/go-qrcode"
+	"resty.dev/v3"
 )
 
 type QRCodeSession struct {
@@ -25,7 +25,7 @@ func (s *QRCodeSession) QRCode() ([]byte, error) {
 // QRCodeByApi get QRCode matrix or image by api.
 func (s *QRCodeSession) QRCodeByApi() ([]byte, error) {
 	resp, err := resty.New().R().Get(fmt.Sprintf(ApiQrcodeImage, s.UID))
-	return resp.Body(), err
+	return resp.Bytes(), err
 }
 
 // QRCodeStart starts a QRCode login session.
@@ -33,7 +33,7 @@ func (c *Pan115Client) QRCodeStart() (*QRCodeSession, error) {
 	result := QRCodeTokenResp{}
 	resp, err := c.NewRequest().
 		SetResult(&result).
-		ForceContentType("application/json;charset=UTF-8").
+		SetForceResponseContentType("application/json;charset=UTF-8").
 		Get(ApiQrcodeToken)
 
 	if err = CheckErr(err, &result, resp); err != nil {
@@ -72,7 +72,7 @@ func (c *Pan115Client) QRCodeLoginWithApp(s *QRCodeSession, app LoginApp) (*Cred
 			"account": s.UID,
 			"app":     string(app),
 		}).
-		ForceContentType("application/json;charset=UTF-8").
+		SetForceResponseContentType("application/json;charset=UTF-8").
 		SetResult(&result)
 	resp, err := req.Post(fmt.Sprintf(ApiQrcodeLoginWithApp, app))
 	if err = CheckErr(err, &result, resp); err != nil {
@@ -126,7 +126,7 @@ func (c *Pan115Client) QRCodeStatus(s *QRCodeSession) (*QRCodeStatus, error) {
 			"sign": s.Sign,
 			"_":    Now().String(),
 		}).
-		ForceContentType("application/json;charset=UTF-8").
+		SetForceResponseContentType("application/json;charset=UTF-8").
 		SetResult(&result)
 
 	resp, err := req.Get(ApiQrcodeStatus)

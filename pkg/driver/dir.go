@@ -3,7 +3,7 @@ package driver
 import (
 	"strings"
 
-	"github.com/go-resty/resty/v2"
+	"resty.dev/v3"
 )
 
 // Mkdir make a new directory which name and parent directory id, return directory id
@@ -16,7 +16,7 @@ func (c *Pan115Client) Mkdir(parentID string, name string) (string, error) {
 	req := c.NewRequest().
 		SetFormData(form).
 		SetResult(&result).
-		ForceContentType("application/json;charset=UTF-8")
+		SetForceResponseContentType("application/json;charset=UTF-8")
 
 	resp, err := req.Post(ApiDirAdd)
 
@@ -55,7 +55,7 @@ func (c *Pan115Client) ListWithLimit(dirID string, limit int64, opts ...ListOpti
 	offset := int64(0)
 	for i := 0; ; i++ {
 		apiURL := apiURLs[i%len(apiURLs)]
-		req := c.NewRequest().ForceContentType("application/json;charset=UTF-8")
+		req := c.NewRequest().SetForceResponseContentType("application/json;charset=UTF-8")
 		getFilesOpts := []GetFileOptions{
 			WithApiURL(apiURL),
 			WithLimit(limit),
@@ -87,7 +87,7 @@ func (c *Pan115Client) ListPage(dirID string, offset, limit int64, opts ...ListO
 
 	apiURLs := o.ApiURLs
 	var files []File
-	req := c.NewRequest().ForceContentType("application/json;charset=UTF-8")
+	req := c.NewRequest().SetForceResponseContentType("application/json;charset=UTF-8")
 	getFilesOpts := []GetFileOptions{
 		WithApiURL(apiURLs[0]),
 		WithLimit(limit),
@@ -146,7 +146,7 @@ func GetFiles(req *resty.Request, dirID string, opts ...GetFileOptions) (*FileLi
 func (c *Pan115Client) DirName2CID(dir string) (*APIGetDirIDResp, error) {
 	result := APIGetDirIDResp{}
 	dir = strings.TrimPrefix(dir, "/")
-	req := c.NewRequest().ForceContentType("application/json;charset=UTF-8")
+	req := c.NewRequest().SetForceResponseContentType("application/json;charset=UTF-8")
 	req.SetQueryParam("path", dir).SetResult(&result)
 	resp, err := req.Get(ApiDirName2CID)
 	if err = CheckErr(err, &result, resp); err != nil {

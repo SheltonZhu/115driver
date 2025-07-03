@@ -17,7 +17,7 @@ func (c *Pan115Client) CleanRecycleBin(password string, rIDs ...string) error {
 	req := c.NewRequest().
 		SetFormDataFromValues(form).
 		SetResult(&result).
-		ForceContentType("application/json;charset=UTF-8")
+		SetForceResponseContentType("application/json;charset=UTF-8")
 
 	resp, err := req.Post(ApiRecycleClean)
 	return CheckErr(err, &result, resp)
@@ -35,7 +35,7 @@ func (c *Pan115Client) ListRecycleBin(offset, limit int) ([]RecycleBinItem, erro
 			"limit":  strconv.Itoa(limit),
 		}).
 		SetResult(&result).
-		ForceContentType("application/json;charset=UTF-8")
+		SetForceResponseContentType("application/json;charset=UTF-8")
 
 	resp, err := req.Get(ApiRecycleList)
 	err = CheckErr(err, &result, resp)
@@ -69,7 +69,7 @@ func (c *Pan115Client) RevertRecycleBin(rIDs ...string) error {
 	req := c.NewRequest().
 		SetFormDataFromValues(form).
 		SetResult(&result).
-		ForceContentType("application/json;charset=UTF-8")
+		SetForceResponseContentType("application/json;charset=UTF-8")
 
 	resp, err := req.Post(ApiRecycleRevert)
 	return CheckErr(err, &result, resp)

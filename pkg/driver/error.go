@@ -4,13 +4,14 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/pkg/errors"
+	"resty.dev/v3"
 )
 
 var (
 	ErrorNotSupportAlist = errors.New("not support alist due to privacy risk, please use openlist: https://github.com/OpenListTeam/OpenList")
 )
+
 // cookie err
 var (
 	ErrBadCookie = errors.New("bad cookie")

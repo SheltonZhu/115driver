@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	crypto "github.com/SheltonZhu/115driver/pkg/crypto/m115"
-	"github.com/go-resty/resty/v2"
+	"resty.dev/v3"
 )
 
 type FileDownloadUrl struct {
@@ -32,7 +32,7 @@ func (info *DownloadInfo) Get() (io.ReadSeeker, error) {
 		return nil, err
 	}
 
-	return bytes.NewReader(resp.Body()), nil
+	return bytes.NewReader(resp.Bytes()), nil
 }
 
 type DownloadData map[string]*DownloadInfo
@@ -51,7 +51,7 @@ func (c *Pan115Client) DownloadWithUA(pickCode, ua string) (*DownloadInfo, error
 	req := c.NewRequest().
 		SetQueryParam("t", Now().String()).
 		SetFormData(map[string]string{"data": data}).
-		ForceContentType("application/json").
+		SetForceResponseContentType("application/json").
 		SetResult(&result)
 	if len(ua) > 0 {
 		req = req.SetHeader("User-Agent", ua)
@@ -95,7 +95,7 @@ func (c *Pan115Client) DownloadWithUAByAndroidAPI(pickCode string, ua string) (*
 	req := c.NewRequest().
 		SetQueryParam("t", Now().String()).
 		SetFormData(map[string]string{"data": data}).
-		ForceContentType("application/json").
+		SetForceResponseContentType("application/json").
 		SetResult(&result)
 	if len(ua) > 0 {
 		req = req.SetHeader("User-Agent", ua)
@@ -166,7 +166,7 @@ func (c *Pan115Client) DownloadByShareCode(shareCode, receiveCode, fileID string
 	req := c.NewRequest().
 		SetQueryParam("t", Now().String()).
 		SetFormData(map[string]string{"data": data}).
-		ForceContentType("application/json").
+		SetForceResponseContentType("application/json").
 		SetResult(&result)
 	// if len(ua) > 0 {
 	// req = req.SetHeader("User-Agent", ua)

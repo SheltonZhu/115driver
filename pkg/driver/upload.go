@@ -31,7 +31,7 @@ func (c *Pan115Client) GetDigestResult(r io.Reader) (*hash.DigestResult, error) 
 // GetUploadEndpoint get upload endPoint
 func (c *Pan115Client) GetUploadEndpoint(endpoint *UploadEndpointResp) error {
 	req := c.NewRequest().
-		ForceContentType("application/json;charset=UTF-8").
+		SetForceResponseContentType("application/json;charset=UTF-8").
 		SetResult(&endpoint)
 	_, err := req.Get(ApiGetUploadEndpoint)
 	if err != nil {
@@ -44,7 +44,7 @@ func (c *Pan115Client) GetUploadEndpoint(endpoint *UploadEndpointResp) error {
 func (c *Pan115Client) GetUploadInfo() error {
 	result := UploadInfoResp{}
 	req := c.NewRequest().
-		ForceContentType("application/json;charset=UTF-8").
+		SetForceResponseContentType("application/json;charset=UTF-8").
 		SetResult(&result)
 	resp, err := req.Post(ApiUploadInfo)
 	if err = CheckErr(err, &result, resp); err != nil {
@@ -154,7 +154,7 @@ func (c *Pan115Client) UploadByOSS(params *UploadOSSParams, r io.Reader, dirID s
 
 func (c *Pan115Client) checkUploadStatus(dirID, sha1 string) error {
 	// 验证上传是否成功
-	req := c.NewRequest().ForceContentType("application/json;charset=UTF-8")
+	req := c.NewRequest().SetForceResponseContentType("application/json;charset=UTF-8")
 	opts := []GetFileOptions{
 		WithOrder(FileOrderByTime),
 		WithShowDirEnable(false),
@@ -177,7 +177,7 @@ func (c *Pan115Client) checkUploadStatus(dirID, sha1 string) error {
 func (c *Pan115Client) GetOSSToken() (*UploadOSSTokenResp, error) {
 	result := UploadOSSTokenResp{}
 	req := c.NewRequest().
-		ForceContentType("application/json;charset=UTF-8").
+		SetForceResponseContentType("application/json;charset=UTF-8").
 		SetResult(&result)
 
 	resp, err := req.Get(ApiUploadOSSToken)
@@ -222,7 +222,7 @@ func (c *Pan115Client) RapidUpload(fileSize int64, fileName, dirID, preID, fileI
 	form.Set("target", target)
 	form.Set("sig", c.GenerateSignature(fileID, target))
 	form.Set("topupload", "true")
-	
+
 	signKey, signVal := "", ""
 	for retry := true; retry; {
 		t := NowMilli()
@@ -254,7 +254,7 @@ func (c *Pan115Client) RapidUpload(fileSize int64, fileName, dirID, preID, fileI
 		if err != nil {
 			return nil, err
 		}
-		data := resp.RawBody()
+		data := resp.Body
 		defer data.Close()
 		if bodyBytes, err = io.ReadAll(data); err != nil {
 			return nil, err
