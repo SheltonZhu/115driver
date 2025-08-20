@@ -201,7 +201,7 @@ func TestDownloadByShareCode(t *testing.T) {
 	down := teardown(t)
 	defer down(t)
 
-	_, err := client.DownloadByShareCode("ssw60op83nuc", "y909", "2722742594004297631")
+	_, err := client.DownloadByShareCode("sw6pw793wfp", "w816", "2628478209787264315")
 	assert.ErrorIs(t, err, ErrSharedNotFound)
 }
 
@@ -414,7 +414,7 @@ func TestShareSnap(t *testing.T) {
 	down := teardown(t)
 	defer down(t)
 
-	_, err := client.GetShareSnap("ssw60op83nuc", "test", "")
+	_, err := client.GetShareSnap("sw6pw793wfp", "w816", "")
 	assert.ErrorIs(t, err, ErrSharedNotFound)
 }
 
