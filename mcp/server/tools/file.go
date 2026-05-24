@@ -3,10 +3,15 @@ package tools
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"net"
+	"net/http"
+	"net/url"
 	"os"
-	"strings"
+	"path/filepath"
+	"time"
 
 	"github.com/SheltonZhu/115driver/pkg/driver"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
@@ -14,15 +19,71 @@ import (
 
 // FileTools holds file-related MCP tools
 type FileTools struct {
-	client *driver.Pan115Client
+	client            *driver.Pan115Client
+	localRoot         string
+	downloadTimeout   time.Duration
+	urlUploadMaxBytes int64
+	downloadMaxBytes  int64
+	allowDestructive  bool
+}
+
+type FileToolsOption func(*FileTools)
+
+func WithLocalRoot(root string) FileToolsOption {
+	return func(ft *FileTools) {
+		ft.localRoot = root
+	}
+}
+
+func WithDownloadTimeout(timeout time.Duration) FileToolsOption {
+	return func(ft *FileTools) {
+		ft.downloadTimeout = timeout
+	}
+}
+
+func WithURLUploadMaxBytes(maxBytes int64) FileToolsOption {
+	return func(ft *FileTools) {
+		ft.urlUploadMaxBytes = maxBytes
+	}
+}
+
+func WithDownloadMaxBytes(maxBytes int64) FileToolsOption {
+	return func(ft *FileTools) {
+		ft.downloadMaxBytes = maxBytes
+	}
+}
+
+func WithDestructiveTools(allow bool) FileToolsOption {
+	return func(ft *FileTools) {
+		ft.allowDestructive = allow
+	}
 }
 
 // NewFileTools creates a new FileTools instance
-func NewFileTools(client *driver.Pan115Client) *FileTools {
-	return &FileTools{
-		client: client,
+func NewFileTools(client *driver.Pan115Client, opts ...FileToolsOption) *FileTools {
+	ft := &FileTools{
+		client:            client,
+		downloadTimeout:   defaultMCPDownloadTimeout,
+		urlUploadMaxBytes: defaultMCPURLUploadMaxBytes,
+		downloadMaxBytes:  defaultMCPDownloadMaxBytes,
 	}
+	for _, opt := range opts {
+		opt(ft)
+	}
+	return ft
 }
+
+const (
+	defaultMCPURLUploadMaxBytes int64 = 2 << 30 // 2 GiB
+	defaultMCPDownloadMaxBytes  int64 = 0       // unlimited
+	defaultMCPDownloadTimeout         = 2 * time.Hour
+)
+
+var (
+	errUnexpectedHTTPStatus = errors.New("unexpected HTTP status")
+	errResponseTooLarge     = errors.New("response too large")
+	errInvalidSizeLimit     = errors.New("invalid size limit")
+)
 
 // MkdirArgs defines arguments for mkdir tool
 type MkdirArgs struct {
@@ -99,45 +160,49 @@ type DownloadFileResult struct {
 
 // RegisterTools registers file-related tools with the MCP server
 func (ft *FileTools) RegisterTools(server *mcp.Server) {
-	mcp.AddTool(server, &mcp.Tool{
-		Name:        "mkdir",
-		Description: "Create a new directory",
-	}, ft.mkdir)
+	if ft.allowDestructive {
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "mkdir",
+			Description: "Create a new directory",
+		}, ft.mkdir)
 
-	mcp.AddTool(server, &mcp.Tool{
-		Name:        "delete",
-		Description: "Delete files or directories",
-	}, ft.delete)
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "delete",
+			Description: "Delete files or directories",
+		}, ft.delete)
 
-	mcp.AddTool(server, &mcp.Tool{
-		Name:        "rename",
-		Description: "Rename a file or directory",
-	}, ft.rename)
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "rename",
+			Description: "Rename a file or directory",
+		}, ft.rename)
 
-	mcp.AddTool(server, &mcp.Tool{
-		Name:        "move",
-		Description: "Move files or directories to another directory",
-	}, ft.move)
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "move",
+			Description: "Move files or directories to another directory",
+		}, ft.move)
 
-	mcp.AddTool(server, &mcp.Tool{
-		Name:        "copy",
-		Description: "Copy files or directories to another directory",
-	}, ft.copy)
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "copy",
+			Description: "Copy files or directories to another directory",
+		}, ft.copy)
+	}
 
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "stat",
 		Description: "Get detailed information about a file or directory",
 	}, ft.stat)
 
-	mcp.AddTool(server, &mcp.Tool{
-		Name:        "upload_from_url",
-		Description: "Upload a file to 115 cloud storage from a URL",
-	}, ft.uploadFromURL)
+	if ft.allowDestructive {
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "upload_from_url",
+			Description: "Upload a file to 115 cloud storage from a URL",
+		}, ft.uploadFromURL)
 
-	mcp.AddTool(server, &mcp.Tool{
-		Name:        "upload_from_local",
-		Description: "Upload a local file to 115 cloud storage",
-	}, ft.uploadFromLocal)
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "upload_from_local",
+			Description: "Upload a local file to 115 cloud storage",
+		}, ft.uploadFromLocal)
+	}
 
 	mcp.AddTool(server, &mcp.Tool{
 		Name:        "download_file",
@@ -187,7 +252,6 @@ func (ft *FileTools) mkdir(ctx context.Context, req *mcp.CallToolRequest, args M
 		},
 	}, nil, nil
 }
-
 
 func (ft *FileTools) delete(ctx context.Context, req *mcp.CallToolRequest, args DeleteArgs) (*mcp.CallToolResult, any, error) {
 	if len(args.FileIDs) == 0 {
@@ -357,8 +421,17 @@ func (ft *FileTools) stat(ctx context.Context, req *mcp.CallToolRequest, args St
 }
 
 func (ft *FileTools) uploadFromURL(ctx context.Context, req *mcp.CallToolRequest, args UploadFromURLArgs) (*mcp.CallToolResult, any, error) {
+	downloadURL, err := validateUploadURL(args.URL)
+	if err != nil {
+		return toolError(fmt.Sprintf("Invalid URL: %v", err)), nil, nil
+	}
+
 	// Download the file from the URL
-	resp, err := ft.client.Client.R().SetDoNotParseResponse(true).Get(args.URL)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, downloadURL.String(), nil)
+	if err != nil {
+		return toolError(fmt.Sprintf("Failed to create download request: %v", err)), nil, nil
+	}
+	resp, err := newMCPHTTPClient(ft.downloadTimeout).Do(httpReq)
 	if err != nil {
 		return &mcp.CallToolResult{
 			Content: []mcp.Content{
@@ -369,25 +442,13 @@ func (ft *FileTools) uploadFromURL(ctx context.Context, req *mcp.CallToolRequest
 			IsError: true,
 		}, nil, nil
 	}
-	defer resp.RawBody().Close()
-
-	if resp.StatusCode() != 200 {
-		return &mcp.CallToolResult{
-			Content: []mcp.Content{
-				&mcp.TextContent{
-					Text: fmt.Sprintf("Failed to download file from URL, status code: %d", resp.StatusCode()),
-				},
-			},
-			IsError: true,
-		}, nil, nil
-	}
+	defer resp.Body.Close()
 
 	// If fileName is empty, try to extract it from the URL
 	fileName := args.FileName
 	if fileName == "" {
-		parts := strings.Split(args.URL, "/")
-		fileName = parts[len(parts)-1]
-		if fileName == "" {
+		fileName = filepath.Base(downloadURL.Path)
+		if fileName == "" || fileName == "." || fileName == "/" {
 			fileName = "downloaded_file"
 		}
 	}
@@ -408,7 +469,7 @@ func (ft *FileTools) uploadFromURL(ctx context.Context, req *mcp.CallToolRequest
 	defer tempFile.Close()
 
 	// Copy the response body to the temporary file
-	_, err = io.Copy(tempFile, resp.RawBody())
+	err = copyHTTPResponse(tempFile, resp, ft.urlUploadMaxBytes)
 	if err != nil {
 		return &mcp.CallToolResult{
 			Content: []mcp.Content{
@@ -486,8 +547,13 @@ func (ft *FileTools) uploadFromURL(ctx context.Context, req *mcp.CallToolRequest
 }
 
 func (ft *FileTools) uploadFromLocal(ctx context.Context, req *mcp.CallToolRequest, args UploadFromLocalArgs) (*mcp.CallToolResult, any, error) {
+	localPath, err := validateLocalPath(ft.localRoot, args.LocalPath, true)
+	if err != nil {
+		return toolError(fmt.Sprintf("Local file access denied: %v", err)), nil, nil
+	}
+
 	// Open the local file
-	file, err := os.Open(args.LocalPath)
+	file, err := os.Open(localPath)
 	if err != nil {
 		return &mcp.CallToolResult{
 			Content: []mcp.Content{
@@ -574,6 +640,11 @@ func (ft *FileTools) uploadFromLocal(ctx context.Context, req *mcp.CallToolReque
 }
 
 func (ft *FileTools) downloadFile(ctx context.Context, req *mcp.CallToolRequest, args DownloadFileArgs) (*mcp.CallToolResult, any, error) {
+	localPath, err := validateLocalPath(ft.localRoot, args.LocalPath, false)
+	if err != nil {
+		return toolError(fmt.Sprintf("Local file access denied: %v", err)), nil, nil
+	}
+
 	// Get download info with the specified User-Agent
 	downloadInfo, err := ft.client.DownloadWithUA(args.PickCode, args.UserAgent)
 	if err != nil {
@@ -588,12 +659,17 @@ func (ft *FileTools) downloadFile(ctx context.Context, req *mcp.CallToolRequest,
 	}
 
 	// Perform the actual download using the same User-Agent
-	reqDownload := ft.client.Client.R()
-	if args.UserAgent != "" {
-		reqDownload = reqDownload.SetHeader("User-Agent", args.UserAgent)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, downloadInfo.Url.Url, nil)
+	if err != nil {
+		return toolError(fmt.Sprintf("Failed to create download request: %v", err)), nil, nil
+	}
+	for k, vals := range downloadInfo.Header {
+		for _, v := range vals {
+			httpReq.Header.Add(k, v)
+		}
 	}
 
-	resp, err := reqDownload.SetDoNotParseResponse(true).Get(downloadInfo.Url.Url)
+	resp, err := newMCPHTTPClient(ft.downloadTimeout).Do(httpReq)
 	if err != nil {
 		return &mcp.CallToolResult{
 			Content: []mcp.Content{
@@ -604,25 +680,9 @@ func (ft *FileTools) downloadFile(ctx context.Context, req *mcp.CallToolRequest,
 			IsError: true,
 		}, nil, nil
 	}
-	defer resp.RawBody().Close()
+	defer resp.Body.Close()
 
-	// Create the local file
-	localFile, err := os.Create(args.LocalPath)
-	if err != nil {
-		return &mcp.CallToolResult{
-			Content: []mcp.Content{
-				&mcp.TextContent{
-					Text: fmt.Sprintf("Failed to create local file: %v", err),
-				},
-			},
-			IsError: true,
-		}, nil, nil
-	}
-	defer localFile.Close()
-
-	// Copy the downloaded content to the local file
-	_, err = io.Copy(localFile, resp.RawBody())
-	if err != nil {
+	if err := saveHTTPResponseToFile(localPath, resp, ft.downloadMaxBytes); err != nil {
 		return &mcp.CallToolResult{
 			Content: []mcp.Content{
 				&mcp.TextContent{
@@ -697,4 +757,211 @@ func (ft *FileTools) getDownloadInfo(ctx context.Context, req *mcp.CallToolReque
 			},
 		},
 	}, nil, nil
+}
+
+func validateUploadURL(rawURL string) (*url.URL, error) {
+	parsed, err := url.Parse(rawURL)
+	if err != nil {
+		return nil, err
+	}
+	if parsed.Scheme != "http" && parsed.Scheme != "https" {
+		return nil, fmt.Errorf("unsupported scheme %q", parsed.Scheme)
+	}
+	host := parsed.Hostname()
+	if host == "" {
+		return nil, errors.New("missing host")
+	}
+	if isUnsafeHost(host) {
+		return nil, fmt.Errorf("host %q is not allowed", host)
+	}
+	return parsed, nil
+}
+
+func isUnsafeHost(host string) bool {
+	if host == "localhost" {
+		return true
+	}
+	if ip := net.ParseIP(host); ip != nil {
+		return isUnsafeIP(ip)
+	}
+	return false
+}
+
+func validateResolvedIPs(host string, ips []net.IP) error {
+	if len(ips) == 0 {
+		return fmt.Errorf("host %q did not resolve to any IPs", host)
+	}
+	for _, ip := range ips {
+		if ip == nil || isUnsafeIP(ip) {
+			return fmt.Errorf("host %q resolved to unsafe IP %s", host, ip)
+		}
+	}
+	return nil
+}
+
+func dialResolvedIPs(ctx context.Context, network, host, port string, ips []net.IP, dial func(context.Context, string, string) (net.Conn, error)) (net.Conn, error) {
+	if err := validateResolvedIPs(host, ips); err != nil {
+		return nil, err
+	}
+
+	var errs []error
+	for _, ip := range ips {
+		address := net.JoinHostPort(ip.String(), port)
+		conn, err := dial(ctx, network, address)
+		if err == nil {
+			return conn, nil
+		}
+		errs = append(errs, fmt.Errorf("%s: %w", address, err))
+	}
+	return nil, fmt.Errorf("dial %q: %w", host, errors.Join(errs...))
+}
+
+func isUnsafeIP(ip net.IP) bool {
+	return ip.IsLoopback() ||
+		ip.IsPrivate() ||
+		ip.IsLinkLocalUnicast() ||
+		ip.IsLinkLocalMulticast() ||
+		ip.IsUnspecified()
+}
+
+func validateLocalPath(root, target string, mustExist bool) (string, error) {
+	if root == "" {
+		return "", errors.New("local root is not configured")
+	}
+	absRoot, err := filepath.Abs(root)
+	if err != nil {
+		return "", err
+	}
+	realRoot, err := filepath.EvalSymlinks(absRoot)
+	if err != nil {
+		return "", fmt.Errorf("resolve local root: %w", err)
+	}
+	absTarget, err := filepath.Abs(target)
+	if err != nil {
+		return "", err
+	}
+
+	pathToCheck := absTarget
+	if !mustExist && !pathExists(absTarget) {
+		pathToCheck, err = nearestExistingPath(filepath.Dir(absTarget))
+		if err != nil {
+			return "", err
+		}
+	}
+	realCheck, err := filepath.EvalSymlinks(pathToCheck)
+	if err != nil {
+		if mustExist || !os.IsNotExist(err) {
+			return "", err
+		}
+		realCheck = pathToCheck
+	}
+
+	rel, err := filepath.Rel(realRoot, realCheck)
+	if err != nil {
+		return "", err
+	}
+	if rel == ".." || len(rel) >= 3 && rel[:3] == ".."+string(filepath.Separator) {
+		return "", errors.New("path escapes local root")
+	}
+	return absTarget, nil
+}
+
+func nearestExistingPath(path string) (string, error) {
+	for {
+		if pathExists(path) {
+			return path, nil
+		}
+		parent := filepath.Dir(path)
+		if parent == path {
+			return "", fmt.Errorf("no existing parent for %q", path)
+		}
+		path = parent
+	}
+}
+
+func pathExists(path string) bool {
+	_, err := os.Lstat(path)
+	return err == nil
+}
+
+func copyHTTPResponse(dst io.Writer, resp *http.Response, maxBytes int64) error {
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("%w: %d", errUnexpectedHTTPStatus, resp.StatusCode)
+	}
+	if maxBytes < 0 {
+		return fmt.Errorf("%w: %d", errInvalidSizeLimit, maxBytes)
+	}
+	if maxBytes == 0 {
+		_, err := io.Copy(dst, resp.Body)
+		return err
+	}
+	limited := &io.LimitedReader{R: resp.Body, N: maxBytes + 1}
+	written, err := io.Copy(dst, limited)
+	if err != nil {
+		return err
+	}
+	if written > maxBytes || limited.N == 0 {
+		return fmt.Errorf("%w: limit is %d bytes", errResponseTooLarge, maxBytes)
+	}
+	return nil
+}
+
+func newMCPHTTPClient(timeout time.Duration) *http.Client {
+	dialer := &net.Dialer{Timeout: 30 * time.Second}
+	return &http.Client{
+		Timeout: timeout,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			if _, err := validateUploadURL(req.URL.String()); err != nil {
+				return err
+			}
+			return nil
+		},
+		Transport: &http.Transport{
+			Proxy: nil,
+			DialContext: func(ctx context.Context, network, address string) (net.Conn, error) {
+				host, port, err := net.SplitHostPort(address)
+				if err != nil {
+					return nil, err
+				}
+				ips, err := net.DefaultResolver.LookupIP(ctx, "ip", host)
+				if err != nil {
+					return nil, err
+				}
+				return dialResolvedIPs(ctx, network, host, port, ips, dialer.DialContext)
+			},
+		},
+	}
+}
+
+func saveHTTPResponseToFile(path string, resp *http.Response, maxBytes int64) error {
+	if maxBytes < 0 {
+		return fmt.Errorf("%w: %d", errInvalidSizeLimit, maxBytes)
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		return err
+	}
+	tmp, err := os.CreateTemp(filepath.Dir(path), "."+filepath.Base(path)+".*")
+	if err != nil {
+		return err
+	}
+	tmpPath := tmp.Name()
+	defer os.Remove(tmpPath)
+
+	if err := copyHTTPResponse(tmp, resp, maxBytes); err != nil {
+		tmp.Close()
+		return err
+	}
+	if err := tmp.Close(); err != nil {
+		return err
+	}
+	return os.Rename(tmpPath, path)
+}
+
+func toolError(text string) *mcp.CallToolResult {
+	return &mcp.CallToolResult{
+		Content: []mcp.Content{
+			&mcp.TextContent{Text: text},
+		},
+		IsError: true,
+	}
 }
