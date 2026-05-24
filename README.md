@@ -284,7 +284,9 @@ By default, the MCP server only registers read-only cloud tools plus
 Tools that create, upload, move, rename, delete, clean recycle bin items, or
 add/remove offline tasks require `--allow-destructive-tools`.
 `upload_from_url` only accepts HTTP/HTTPS URLs, rejects redirects to unsafe
-hosts, and blocks loopback/private/link-local resolved addresses.
+hosts, and blocks loopback/private/link-local resolved addresses. If a hostname
+resolves to multiple safe addresses, MCP HTTP transfers try later addresses when
+an earlier address cannot be reached.
 
 ### Available Tools
 

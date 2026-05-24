@@ -798,6 +798,23 @@ func validateResolvedIPs(host string, ips []net.IP) error {
 	return nil
 }
 
+func dialResolvedIPs(ctx context.Context, network, host, port string, ips []net.IP, dial func(context.Context, string, string) (net.Conn, error)) (net.Conn, error) {
+	if err := validateResolvedIPs(host, ips); err != nil {
+		return nil, err
+	}
+
+	var errs []error
+	for _, ip := range ips {
+		address := net.JoinHostPort(ip.String(), port)
+		conn, err := dial(ctx, network, address)
+		if err == nil {
+			return conn, nil
+		}
+		errs = append(errs, fmt.Errorf("%s: %w", address, err))
+	}
+	return nil, fmt.Errorf("dial %q: %w", host, errors.Join(errs...))
+}
+
 func isUnsafeIP(ip net.IP) bool {
 	return ip.IsLoopback() ||
 		ip.IsPrivate() ||
@@ -890,10 +907,7 @@ func newMCPHTTPClient(timeout time.Duration) *http.Client {
 				if err != nil {
 					return nil, err
 				}
-				if err := validateResolvedIPs(host, ips); err != nil {
-					return nil, err
-				}
-				return dialer.DialContext(ctx, network, net.JoinHostPort(ips[0].String(), port))
+				return dialResolvedIPs(ctx, network, host, port, ips, dialer.DialContext)
 			},
 		},
 	}
