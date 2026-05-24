@@ -78,6 +78,9 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Usage: %s --cookie=\"UID=xxx;CID=xxx;SEID=xxx\" [--profile main] [--config ~/.115driver/config.toml]\n", os.Args[0])
 		os.Exit(1)
 	}
+	if err := validateOptions(*urlUploadMaxBytes, *downloadMaxBytes, *downloadTimeout); err != nil {
+		log.Fatalf("Invalid options: %v", err)
+	}
 
 	cr, err := credentialFromCookie(cookieStr)
 	if err != nil {

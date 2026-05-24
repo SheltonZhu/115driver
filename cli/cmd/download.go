@@ -25,6 +25,9 @@ var downloadCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		remotePath := args[0]
 		localTarget := args[1]
+		if err := validateDownloadTimeout(downloadTimeout); err != nil {
+			return &exitError{code: output.ExitArgs, msg: err.Error()}
+		}
 
 		fileID, _, err := resolver.ResolvePath(client, remotePath)
 		if err != nil {
@@ -100,6 +103,13 @@ func resolveDownloadTargetPath(localTarget, fileName string) string {
 
 func newDownloadHTTPClient(timeout time.Duration) *http.Client {
 	return &http.Client{Timeout: timeout}
+}
+
+func validateDownloadTimeout(timeout time.Duration) error {
+	if timeout < 0 {
+		return fmt.Errorf("timeout must be >= 0")
+	}
+	return nil
 }
 
 func saveDownloadResponse(localPath string, resp *http.Response, maxBytes int64) error {

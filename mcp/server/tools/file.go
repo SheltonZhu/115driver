@@ -82,6 +82,7 @@ const (
 var (
 	errUnexpectedHTTPStatus = errors.New("unexpected HTTP status")
 	errResponseTooLarge     = errors.New("response too large")
+	errInvalidSizeLimit     = errors.New("invalid size limit")
 )
 
 // MkdirArgs defines arguments for mkdir tool
@@ -887,7 +888,10 @@ func copyHTTPResponse(dst io.Writer, resp *http.Response, maxBytes int64) error 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("%w: %d", errUnexpectedHTTPStatus, resp.StatusCode)
 	}
-	if maxBytes <= 0 {
+	if maxBytes < 0 {
+		return fmt.Errorf("%w: %d", errInvalidSizeLimit, maxBytes)
+	}
+	if maxBytes == 0 {
 		_, err := io.Copy(dst, resp.Body)
 		return err
 	}
@@ -930,6 +934,9 @@ func newMCPHTTPClient(timeout time.Duration) *http.Client {
 }
 
 func saveHTTPResponseToFile(path string, resp *http.Response, maxBytes int64) error {
+	if maxBytes < 0 {
+		return fmt.Errorf("%w: %d", errInvalidSizeLimit, maxBytes)
+	}
 	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 		return err
 	}

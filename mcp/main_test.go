@@ -123,14 +123,14 @@ func TestCredentialFromCookie_AcceptsValidCookie(t *testing.T) {
 }
 
 func TestValidateOptions_RejectsNegativeValues(t *testing.T) {
-	if err := validateOptions(-1, 0, 0); err == nil {
-		t.Fatal("expected negative url-upload-max-bytes to be rejected")
+	if err := validateOptions(-1, 0, time.Hour); err == nil {
+		t.Fatal("expected negative URL upload limit to be rejected")
 	}
-	if err := validateOptions(0, -1, 0); err == nil {
-		t.Fatal("expected negative download-max-bytes to be rejected")
+	if err := validateOptions(0, -1, time.Hour); err == nil {
+		t.Fatal("expected negative download limit to be rejected")
 	}
 	if err := validateOptions(0, 0, -time.Second); err == nil {
-		t.Fatal("expected negative download-timeout to be rejected")
+		t.Fatal("expected negative timeout to be rejected")
 	}
 }
 

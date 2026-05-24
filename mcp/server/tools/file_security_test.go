@@ -146,6 +146,41 @@ func TestCopyHTTPResponseAllowsUnlimitedSizeWhenLimitIsZero(t *testing.T) {
 	}
 }
 
+func TestCopyHTTPResponseRejectsNegativeSizeLimit(t *testing.T) {
+	var out strings.Builder
+	resp := &http.Response{
+		StatusCode: http.StatusOK,
+		Body:       io.NopCloser(strings.NewReader("abcdef")),
+	}
+
+	err := copyHTTPResponse(&out, resp, -1)
+	if err == nil {
+		t.Fatal("expected negative size limit to fail")
+	}
+	if !errors.Is(err, errInvalidSizeLimit) {
+		t.Fatalf("expected errInvalidSizeLimit, got %v", err)
+	}
+}
+
+func TestSaveHTTPResponseToFileRejectsNegativeSizeLimit(t *testing.T) {
+	target := filepath.Join(t.TempDir(), "target.txt")
+	resp := &http.Response{
+		StatusCode: http.StatusOK,
+		Body:       io.NopCloser(strings.NewReader("abcdef")),
+	}
+
+	err := saveHTTPResponseToFile(target, resp, -1)
+	if err == nil {
+		t.Fatal("expected negative size limit to fail")
+	}
+	if !errors.Is(err, errInvalidSizeLimit) {
+		t.Fatalf("expected errInvalidSizeLimit, got %v", err)
+	}
+	if _, statErr := os.Stat(target); !os.IsNotExist(statErr) {
+		t.Fatalf("expected target not to be created, stat err: %v", statErr)
+	}
+}
+
 func TestMCPDefaultDownloadSizeAllowsLargeDownloads(t *testing.T) {
 	if defaultMCPDownloadMaxBytes != 0 {
 		t.Fatalf("expected default MCP download size to be unlimited, got %d", defaultMCPDownloadMaxBytes)

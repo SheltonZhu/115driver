@@ -47,6 +47,18 @@ func TestDownloadHTTPClientDefaultTimeoutAllowsLargeDownloads(t *testing.T) {
 	}
 }
 
+func TestValidateDownloadTimeoutRejectsNegativeTimeout(t *testing.T) {
+	if err := validateDownloadTimeout(-time.Second); err == nil {
+		t.Fatal("expected negative timeout to be rejected")
+	}
+}
+
+func TestValidateDownloadTimeoutAllowsZeroToDisableTimeout(t *testing.T) {
+	if err := validateDownloadTimeout(0); err != nil {
+		t.Fatalf("expected zero timeout to be accepted: %v", err)
+	}
+}
+
 func TestSaveDownloadResponsePreservesExistingFileOnFailure(t *testing.T) {
 	target := filepath.Join(t.TempDir(), "target.txt")
 	if err := os.WriteFile(target, []byte("old"), 0600); err != nil {
