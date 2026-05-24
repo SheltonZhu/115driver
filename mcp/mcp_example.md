@@ -68,7 +68,7 @@ mutations:
    - Parameters:
      - `dir_id` (string): Directory ID to list, default is root directory (0)
      - `offset` (int64): Offset for pagination, default is 0
-     - `limit` (int64): Number of items to return, default is 100, maximum is 500
+     - `limit` (int64): Number of items to return. Omit or set to 0 to return all items; positive limits are capped at 500
 
 2. `mkdir`: Create a new directory. Requires `--allow-destructive-tools`.
    - Parameters:

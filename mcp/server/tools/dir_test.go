@@ -2,13 +2,13 @@ package tools
 
 import "testing"
 
-func TestNormalizeDirectoryListLimitDefaultsToBoundedPage(t *testing.T) {
-	offset, limit := normalizeDirectoryListPagination(0, 0)
+func TestNormalizeDirectoryListLimitPreservesUnpaginatedDefault(t *testing.T) {
+	offset, limit := normalizeDirectoryListPagination(25, 0)
 	if offset != 0 {
 		t.Fatalf("unexpected offset: %d", offset)
 	}
-	if limit != defaultDirectoryListLimit {
-		t.Fatalf("expected default limit %d, got %d", defaultDirectoryListLimit, limit)
+	if limit != 0 {
+		t.Fatalf("expected zero limit to request full listing, got %d", limit)
 	}
 }
 
