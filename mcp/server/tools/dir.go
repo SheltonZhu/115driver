@@ -15,8 +15,7 @@ type DirTools struct {
 }
 
 const (
-	defaultDirectoryListLimit int64 = 100
-	maxDirectoryListLimit     int64 = 500
+	maxDirectoryListLimit int64 = 500
 )
 
 // NewDirTools creates a new DirTools instance
@@ -48,7 +47,11 @@ func (dt *DirTools) listDirectory(ctx context.Context, req *mcp.CallToolRequest,
 	)
 
 	offset, limit := normalizeDirectoryListPagination(args.Offset, args.Limit)
-	files, err = dt.client.ListPage(args.DirID, offset, limit)
+	if limit > 0 {
+		files, err = dt.client.ListPage(args.DirID, offset, limit)
+	} else {
+		files, err = dt.client.List(args.DirID)
+	}
 
 	if err != nil {
 		return &mcp.CallToolResult{
@@ -88,7 +91,7 @@ func normalizeDirectoryListPagination(offset, limit int64) (int64, int64) {
 		offset = 0
 	}
 	if limit <= 0 {
-		limit = defaultDirectoryListLimit
+		return 0, 0
 	}
 	if limit > maxDirectoryListLimit {
 		limit = maxDirectoryListLimit
