@@ -40,6 +40,8 @@ MCP HTTP transfers default to a 2 hour total timeout. Override it with
 the corresponding size limit.
 For SSRF protection, `upload_from_url` rejects non-HTTP(S) URLs, redirects to
 unsafe hosts, and hostnames that resolve to loopback/private/link-local IPs.
+When a hostname resolves to multiple safe IPs, MCP HTTP transfers try the later
+addresses if earlier addresses are unreachable.
 
 Tools that mutate 115 cloud state are not registered by default. Start the
 server with `--allow-destructive-tools` to enable directory creation, file

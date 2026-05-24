@@ -1,6 +1,7 @@
 package tools
 
 import (
+	"context"
 	"errors"
 	"io"
 	"net"
@@ -161,6 +162,35 @@ func TestMCPHTTPClientRejectsUnsafeRedirect(t *testing.T) {
 func TestValidateResolvedIPsRejectsPrivateAddress(t *testing.T) {
 	if err := validateResolvedIPs("example.com", []net.IP{net.ParseIP("10.0.0.1")}); err == nil {
 		t.Fatal("expected private resolved IP to be rejected")
+	}
+}
+
+func TestDialResolvedIPsFallsBackToLaterAddresses(t *testing.T) {
+	ips := []net.IP{
+		net.ParseIP("203.0.113.1"),
+		net.ParseIP("203.0.113.2"),
+	}
+	var attempted []string
+	conn, err := dialResolvedIPs(context.Background(), "tcp", "example.com", "443", ips, func(ctx context.Context, network, address string) (net.Conn, error) {
+		attempted = append(attempted, address)
+		if len(attempted) == 1 {
+			return nil, errors.New("first address unreachable")
+		}
+		client, server := net.Pipe()
+		server.Close()
+		return client, nil
+	})
+	if err != nil {
+		t.Fatalf("expected second address to be used: %v", err)
+	}
+	conn.Close()
+
+	want := []string{
+		net.JoinHostPort("203.0.113.1", "443"),
+		net.JoinHostPort("203.0.113.2", "443"),
+	}
+	if strings.Join(attempted, ",") != strings.Join(want, ",") {
+		t.Fatalf("unexpected dial attempts: got %v want %v", attempted, want)
 	}
 }
 
