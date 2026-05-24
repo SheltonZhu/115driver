@@ -681,27 +681,7 @@ func (ft *FileTools) downloadFile(ctx context.Context, req *mcp.CallToolRequest,
 	}
 	defer resp.Body.Close()
 
-	if err := os.MkdirAll(filepath.Dir(localPath), 0755); err != nil {
-		return toolError(fmt.Sprintf("Failed to create local directory: %v", err)), nil, nil
-	}
-
-	// Create the local file
-	localFile, err := os.Create(localPath)
-	if err != nil {
-		return &mcp.CallToolResult{
-			Content: []mcp.Content{
-				&mcp.TextContent{
-					Text: fmt.Sprintf("Failed to create local file: %v", err),
-				},
-			},
-			IsError: true,
-		}, nil, nil
-	}
-	defer localFile.Close()
-
-	// Copy the downloaded content to the local file
-	err = copyHTTPResponse(localFile, resp, ft.downloadMaxBytes)
-	if err != nil {
+	if err := saveHTTPResponseToFile(localPath, resp, ft.downloadMaxBytes); err != nil {
 		return &mcp.CallToolResult{
 			Content: []mcp.Content{
 				&mcp.TextContent{
@@ -806,6 +786,18 @@ func isUnsafeHost(host string) bool {
 	return false
 }
 
+func validateResolvedIPs(host string, ips []net.IP) error {
+	if len(ips) == 0 {
+		return fmt.Errorf("host %q did not resolve to any IPs", host)
+	}
+	for _, ip := range ips {
+		if ip == nil || isUnsafeIP(ip) {
+			return fmt.Errorf("host %q resolved to unsafe IP %s", host, ip)
+		}
+	}
+	return nil
+}
+
 func isUnsafeIP(ip net.IP) bool {
 	return ip.IsLoopback() ||
 		ip.IsPrivate() ||
@@ -832,7 +824,7 @@ func validateLocalPath(root, target string, mustExist bool) (string, error) {
 	}
 
 	pathToCheck := absTarget
-	if !mustExist {
+	if !mustExist && !pathExists(absTarget) {
 		pathToCheck = filepath.Dir(absTarget)
 	}
 	realCheck, err := filepath.EvalSymlinks(pathToCheck)
@@ -851,6 +843,11 @@ func validateLocalPath(root, target string, mustExist bool) (string, error) {
 		return "", errors.New("path escapes local root")
 	}
 	return absTarget, nil
+}
+
+func pathExists(path string) bool {
+	_, err := os.Lstat(path)
+	return err == nil
 }
 
 func copyHTTPResponse(dst io.Writer, resp *http.Response, maxBytes int64) error {
@@ -873,7 +870,54 @@ func copyHTTPResponse(dst io.Writer, resp *http.Response, maxBytes int64) error 
 }
 
 func newMCPHTTPClient(timeout time.Duration) *http.Client {
-	return &http.Client{Timeout: timeout}
+	dialer := &net.Dialer{Timeout: 30 * time.Second}
+	return &http.Client{
+		Timeout: timeout,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			if _, err := validateUploadURL(req.URL.String()); err != nil {
+				return err
+			}
+			return nil
+		},
+		Transport: &http.Transport{
+			Proxy: nil,
+			DialContext: func(ctx context.Context, network, address string) (net.Conn, error) {
+				host, port, err := net.SplitHostPort(address)
+				if err != nil {
+					return nil, err
+				}
+				ips, err := net.DefaultResolver.LookupIP(ctx, "ip", host)
+				if err != nil {
+					return nil, err
+				}
+				if err := validateResolvedIPs(host, ips); err != nil {
+					return nil, err
+				}
+				return dialer.DialContext(ctx, network, net.JoinHostPort(ips[0].String(), port))
+			},
+		},
+	}
+}
+
+func saveHTTPResponseToFile(path string, resp *http.Response, maxBytes int64) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		return err
+	}
+	tmp, err := os.CreateTemp(filepath.Dir(path), "."+filepath.Base(path)+".*")
+	if err != nil {
+		return err
+	}
+	tmpPath := tmp.Name()
+	defer os.Remove(tmpPath)
+
+	if err := copyHTTPResponse(tmp, resp, maxBytes); err != nil {
+		tmp.Close()
+		return err
+	}
+	if err := tmp.Close(); err != nil {
+		return err
+	}
+	return os.Rename(tmpPath, path)
 }
 
 func toolError(text string) *mcp.CallToolResult {

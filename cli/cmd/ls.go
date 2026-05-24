@@ -41,6 +41,10 @@ var lsCmd = &cobra.Command{
 			jsonFiles = append(jsonFiles, output.FileToJSON(&f))
 		}
 
+		if jsonOutput {
+			printer.PrintSuccess(buildLSJSONResponse(remotePath, jsonFiles, offset, limit))
+			return nil
+		}
 		if lsLong {
 			printer.PrintFileTable(remotePath, jsonFiles)
 		} else {
@@ -68,4 +72,16 @@ func normalizeLSPage(offset, limit int64) (int64, int64) {
 		limit = maxLSLimit
 	}
 	return offset, limit
+}
+
+func buildLSJSONResponse(path string, files []output.JSONFile, offset, limit int64) map[string]interface{} {
+	hasMore := limit > 0 && int64(len(files)) == limit
+	return map[string]interface{}{
+		"path":        path,
+		"files":       files,
+		"offset":      offset,
+		"limit":       limit,
+		"has_more":    hasMore,
+		"next_offset": offset + int64(len(files)),
+	}
 }

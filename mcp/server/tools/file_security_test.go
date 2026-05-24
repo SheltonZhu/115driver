@@ -3,7 +3,11 @@ package tools
 import (
 	"errors"
 	"io"
+	"net"
 	"net/http"
+	"net/url"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -58,6 +62,22 @@ func TestValidateLocalPathAcceptsPathInsideRoot(t *testing.T) {
 	}
 	if !strings.HasPrefix(got, root) {
 		t.Fatalf("expected %q to stay under %q", got, root)
+	}
+}
+
+func TestValidateLocalPathRejectsExistingSymlinkFileOutsideRoot(t *testing.T) {
+	root := t.TempDir()
+	outside := filepath.Join(t.TempDir(), "outside.txt")
+	if err := os.WriteFile(outside, []byte("outside"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	link := filepath.Join(root, "link")
+	if err := os.Symlink(outside, link); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := validateLocalPath(root, link, false); err == nil {
+		t.Fatal("expected symlink target outside root to be rejected")
 	}
 }
 
@@ -130,8 +150,53 @@ func TestMCPHTTPClientUsesConfiguredTimeout(t *testing.T) {
 	}
 }
 
+func TestMCPHTTPClientRejectsUnsafeRedirect(t *testing.T) {
+	client := newMCPHTTPClient(90 * time.Second)
+	req := &http.Request{URL: mustParseURL(t, "http://127.0.0.1/private")}
+	if err := client.CheckRedirect(req, nil); err == nil {
+		t.Fatal("expected redirect to unsafe host to be rejected")
+	}
+}
+
+func TestValidateResolvedIPsRejectsPrivateAddress(t *testing.T) {
+	if err := validateResolvedIPs("example.com", []net.IP{net.ParseIP("10.0.0.1")}); err == nil {
+		t.Fatal("expected private resolved IP to be rejected")
+	}
+}
+
+func TestSaveHTTPResponseToFilePreservesExistingFileOnFailure(t *testing.T) {
+	target := filepath.Join(t.TempDir(), "target.txt")
+	if err := os.WriteFile(target, []byte("old"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	resp := &http.Response{
+		StatusCode: http.StatusOK,
+		Body:       io.NopCloser(strings.NewReader("abcdef")),
+	}
+
+	if err := saveHTTPResponseToFile(target, resp, 3); err == nil {
+		t.Fatal("expected oversized response to fail")
+	}
+	got, err := os.ReadFile(target)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != "old" {
+		t.Fatalf("expected existing file to be preserved, got %q", string(got))
+	}
+}
+
 func TestMCPDefaultDownloadTimeoutAllowsLargeDownloads(t *testing.T) {
 	if defaultMCPDownloadTimeout < time.Hour {
 		t.Fatalf("expected default timeout to allow large downloads, got %s", defaultMCPDownloadTimeout)
 	}
+}
+
+func mustParseURL(t *testing.T, rawURL string) *url.URL {
+	t.Helper()
+	parsed, err := url.Parse(rawURL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return parsed
 }

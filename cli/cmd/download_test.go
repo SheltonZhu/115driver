@@ -1,7 +1,11 @@
 package cmd
 
 import (
+	"io"
+	"net/http"
+	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -40,5 +44,27 @@ func TestDownloadHTTPClientUsesConfiguredTimeout(t *testing.T) {
 func TestDownloadHTTPClientDefaultTimeoutAllowsLargeDownloads(t *testing.T) {
 	if defaultDownloadTimeout < time.Hour {
 		t.Fatalf("expected default timeout to allow large downloads, got %s", defaultDownloadTimeout)
+	}
+}
+
+func TestSaveDownloadResponsePreservesExistingFileOnFailure(t *testing.T) {
+	target := filepath.Join(t.TempDir(), "target.txt")
+	if err := os.WriteFile(target, []byte("old"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	resp := &http.Response{
+		StatusCode: http.StatusOK,
+		Body:       io.NopCloser(strings.NewReader("new")),
+	}
+
+	if err := saveDownloadResponse(target, resp, 2); err == nil {
+		t.Fatal("expected short write limit to fail")
+	}
+	got, err := os.ReadFile(target)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(got) != "old" {
+		t.Fatalf("expected existing file to be preserved, got %q", string(got))
 	}
 }

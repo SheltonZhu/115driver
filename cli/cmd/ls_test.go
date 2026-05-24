@@ -18,3 +18,16 @@ func TestNormalizeLSPageCapsLargeLimit(t *testing.T) {
 		t.Fatalf("expected max limit %d, got %d", maxLSLimit, limit)
 	}
 }
+
+func TestBuildLSJSONResponseIncludesPaginationMetadata(t *testing.T) {
+	resp := buildLSJSONResponse("/", nil, 10, 5)
+	if resp["offset"] != int64(10) {
+		t.Fatalf("unexpected offset: %v", resp["offset"])
+	}
+	if resp["limit"] != int64(5) {
+		t.Fatalf("unexpected limit: %v", resp["limit"])
+	}
+	if resp["has_more"] != false {
+		t.Fatalf("unexpected has_more: %v", resp["has_more"])
+	}
+}
