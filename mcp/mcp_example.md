@@ -21,7 +21,9 @@ The server will listen on stdin/stdout for MCP requests.
 Local file access is disabled by default. To allow `download_file` to write
 locally, and to allow `upload_from_local` to read local files when destructive
 tools are enabled, start the server with a local root; those tools can only read
-or write paths under that directory:
+or write paths under that directory. Existing target paths and existing parent
+directories are resolved before the boundary check, so symlinks cannot point
+local file tools outside `--local-root`:
 
 ```bash
 ./mcp-server --cookie="UID=your_uid;CID=your_cid;SEID=your_seid" --local-root="/safe/path"

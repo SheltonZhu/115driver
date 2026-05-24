@@ -281,6 +281,9 @@ mcp --cookie="UID=xxx;CID=xxx;SEID=xxx;KID=xxx"
 
 By default, the MCP server only registers read-only cloud tools plus
 `download_file`, which requires `--local-root` before it can write locally.
+Local-root validation resolves existing target paths and existing parent
+directories before allowing local reads or writes, so symlinks cannot point MCP
+file tools outside the configured root.
 Tools that create, upload, move, rename, delete, clean recycle bin items, or
 add/remove offline tasks require `--allow-destructive-tools`.
 `upload_from_url` only accepts HTTP/HTTPS URLs, rejects redirects to unsafe
