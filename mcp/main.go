@@ -60,6 +60,9 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Usage: %s --cookie=\"UID=xxx;CID=xxx;SEID=xxx\"\n", os.Args[0])
 		os.Exit(1)
 	}
+	if err := validateOptions(*urlUploadMaxBytes, *downloadMaxBytes, *downloadTimeout); err != nil {
+		log.Fatalf("Invalid options: %v", err)
+	}
 
 	cr, err := credentialFromCookie(*cookie)
 	if err != nil {
@@ -91,4 +94,17 @@ func credentialFromCookie(cookie string) (*driver.Credential, error) {
 		return nil, err
 	}
 	return cr, nil
+}
+
+func validateOptions(urlUploadMaxBytes, downloadMaxBytes int64, downloadTimeout time.Duration) error {
+	if urlUploadMaxBytes < 0 {
+		return fmt.Errorf("url-upload-max-bytes must be >= 0")
+	}
+	if downloadMaxBytes < 0 {
+		return fmt.Errorf("download-max-bytes must be >= 0")
+	}
+	if downloadTimeout < 0 {
+		return fmt.Errorf("download-timeout must be >= 0")
+	}
+	return nil
 }

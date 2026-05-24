@@ -197,6 +197,7 @@ Additional env vars: `DRIVER115_CONFIG` (config path), `DRIVER115_PROFILE` (prof
 
 # List directory contents
 115driver ls /remote/dir --limit 100 --offset 0
+# Text output prints a next-offset hint when a page may have more entries.
 # With --json, ls includes offset, limit, has_more, and next_offset.
 
 # Upload & Download

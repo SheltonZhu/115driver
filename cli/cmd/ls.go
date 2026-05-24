@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/SheltonZhu/115driver/cli/internal/output"
 	"github.com/SheltonZhu/115driver/cli/internal/resolver"
 	"github.com/spf13/cobra"
@@ -50,6 +53,9 @@ var lsCmd = &cobra.Command{
 		} else {
 			printer.PrintFileList(remotePath, jsonFiles)
 		}
+		if notice := buildLSTextPaginationNotice(len(jsonFiles), offset, limit); notice != "" {
+			fmt.Fprint(os.Stderr, notice)
+		}
 		return nil
 	},
 }
@@ -84,4 +90,12 @@ func buildLSJSONResponse(path string, files []output.JSONFile, offset, limit int
 		"has_more":    hasMore,
 		"next_offset": offset + int64(len(files)),
 	}
+}
+
+func buildLSTextPaginationNotice(fileCount int, offset, limit int64) string {
+	if limit <= 0 || int64(fileCount) < limit {
+		return ""
+	}
+	nextOffset := offset + int64(fileCount)
+	return fmt.Sprintf("Showing %d entries. Use --offset %d to continue.\n", fileCount, nextOffset)
 }

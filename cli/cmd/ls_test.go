@@ -31,3 +31,17 @@ func TestBuildLSJSONResponseIncludesPaginationMetadata(t *testing.T) {
 		t.Fatalf("unexpected has_more: %v", resp["has_more"])
 	}
 }
+
+func TestBuildLSTextPaginationNoticeShowsNextOffsetWhenPageIsFull(t *testing.T) {
+	got := buildLSTextPaginationNotice(100, 200, 100)
+	want := "Showing 100 entries. Use --offset 300 to continue.\n"
+	if got != want {
+		t.Fatalf("unexpected notice: got %q want %q", got, want)
+	}
+}
+
+func TestBuildLSTextPaginationNoticeEmptyWhenPageIsNotFull(t *testing.T) {
+	if got := buildLSTextPaginationNotice(99, 0, 100); got != "" {
+		t.Fatalf("expected no notice, got %q", got)
+	}
+}
