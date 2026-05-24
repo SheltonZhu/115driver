@@ -25,6 +25,9 @@ type Server struct {
 // NewServer creates a new 115driver MCP server
 func NewServer() *Server {
 	return &Server{
+		downloadTimeout:   2 * time.Hour,
+		urlUploadMaxBytes: 2 << 30,
+		downloadMaxBytes:  0,
 		mcpServer: mcp.NewServer(&mcp.Implementation{
 			Name:    "115driver-mcp-server",
 			Version: "1.0.0",

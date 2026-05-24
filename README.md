@@ -197,6 +197,7 @@ Additional env vars: `DRIVER115_CONFIG` (config path), `DRIVER115_PROFILE` (prof
 
 # List directory contents
 115driver ls /remote/dir --limit 100 --offset 0
+# With --json, ls includes offset, limit, has_more, and next_offset.
 
 # Upload & Download
 115driver upload /local/file /remote/dir
@@ -282,6 +283,8 @@ By default, the MCP server only registers read-only cloud tools plus
 `download_file`, which requires `--local-root` before it can write locally.
 Tools that create, upload, move, rename, delete, clean recycle bin items, or
 add/remove offline tasks require `--allow-destructive-tools`.
+`upload_from_url` only accepts HTTP/HTTPS URLs, rejects redirects to unsafe
+hosts, and blocks loopback/private/link-local resolved addresses.
 
 ### Available Tools
 

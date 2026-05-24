@@ -38,6 +38,8 @@ MCP HTTP transfers default to a 2 hour total timeout. Override it with
 2 GiB limit because it buffers through a local temp file. Use
 `--download-max-bytes` or `--url-upload-max-bytes` to set limits; `0` disables
 the corresponding size limit.
+For SSRF protection, `upload_from_url` rejects non-HTTP(S) URLs, redirects to
+unsafe hosts, and hostnames that resolve to loopback/private/link-local IPs.
 
 Tools that mutate 115 cloud state are not registered by default. Start the
 server with `--allow-destructive-tools` to enable directory creation, file

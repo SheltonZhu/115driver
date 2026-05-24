@@ -91,14 +91,7 @@ func downloadFile(dlInfo *driver.DownloadInfo, localPath string) error {
 		return fmt.Errorf("download failed: HTTP %d", resp.StatusCode)
 	}
 
-	out, err := os.Create(localPath)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	_, err = io.Copy(out, resp.Body)
-	return err
+	return saveDownloadResponse(localPath, resp, 0)
 }
 
 func resolveDownloadTargetPath(localTarget, fileName string) string {
@@ -107,6 +100,39 @@ func resolveDownloadTargetPath(localTarget, fileName string) string {
 
 func newDownloadHTTPClient(timeout time.Duration) *http.Client {
 	return &http.Client{Timeout: timeout}
+}
+
+func saveDownloadResponse(localPath string, resp *http.Response, maxBytes int64) error {
+	if err := os.MkdirAll(filepath.Dir(localPath), 0755); err != nil {
+		return err
+	}
+	tmp, err := os.CreateTemp(filepath.Dir(localPath), "."+filepath.Base(localPath)+".*")
+	if err != nil {
+		return err
+	}
+	tmpPath := tmp.Name()
+	defer os.Remove(tmpPath)
+
+	var copyErr error
+	if maxBytes > 0 {
+		limited := &io.LimitedReader{R: resp.Body, N: maxBytes + 1}
+		written, err := io.Copy(tmp, limited)
+		if err != nil {
+			copyErr = err
+		} else if written > maxBytes || limited.N == 0 {
+			copyErr = fmt.Errorf("download exceeds limit of %d bytes", maxBytes)
+		}
+	} else {
+		_, copyErr = io.Copy(tmp, resp.Body)
+	}
+	if copyErr != nil {
+		tmp.Close()
+		return copyErr
+	}
+	if err := tmp.Close(); err != nil {
+		return err
+	}
+	return os.Rename(tmpPath, localPath)
 }
 
 func init() {
