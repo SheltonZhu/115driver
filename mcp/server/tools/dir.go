@@ -14,6 +14,11 @@ type DirTools struct {
 	client *driver.Pan115Client
 }
 
+const (
+	defaultDirectoryListLimit int64 = 100
+	maxDirectoryListLimit     int64 = 500
+)
+
 // NewDirTools creates a new DirTools instance
 func NewDirTools(client *driver.Pan115Client) *DirTools {
 	return &DirTools{
@@ -42,13 +47,8 @@ func (dt *DirTools) listDirectory(ctx context.Context, req *mcp.CallToolRequest,
 		err   error
 	)
 
-	// If offset and limit are specified, use pagination
-	if args.Limit > 0 {
-		files, err = dt.client.ListPage(args.DirID, args.Offset, args.Limit)
-	} else {
-		// Otherwise, list all files (existing behavior)
-		files, err = dt.client.List(args.DirID)
-	}
+	offset, limit := normalizeDirectoryListPagination(args.Offset, args.Limit)
+	files, err = dt.client.ListPage(args.DirID, offset, limit)
 
 	if err != nil {
 		return &mcp.CallToolResult{
@@ -81,4 +81,17 @@ func (dt *DirTools) listDirectory(ctx context.Context, req *mcp.CallToolRequest,
 			},
 		},
 	}, nil, nil
+}
+
+func normalizeDirectoryListPagination(offset, limit int64) (int64, int64) {
+	if offset < 0 {
+		offset = 0
+	}
+	if limit <= 0 {
+		limit = defaultDirectoryListLimit
+	}
+	if limit > maxDirectoryListLimit {
+		limit = maxDirectoryListLimit
+	}
+	return offset, limit
 }

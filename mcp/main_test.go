@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 func writeTestConfig(t *testing.T, content string) string {
@@ -101,5 +102,40 @@ default_offline_save_dir = "save_dir_456"
 	}
 	if saveDir != "save_dir_456" {
 		t.Fatalf("expected save_dir 'save_dir_456', got '%s'", saveDir)
+	}
+}
+
+func TestCredentialFromCookie_RejectsEmptyCookie(t *testing.T) {
+	_, err := credentialFromCookie("")
+	if err == nil {
+		t.Fatal("expected empty cookie to be rejected")
+	}
+}
+
+func TestCredentialFromCookie_AcceptsValidCookie(t *testing.T) {
+	cr, err := credentialFromCookie("UID=1;CID=2;SEID=3;KID=4")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cr == nil {
+		t.Fatal("expected non-nil credential")
+	}
+}
+
+func TestValidateOptions_RejectsNegativeValues(t *testing.T) {
+	if err := validateOptions(-1, 0, 0); err == nil {
+		t.Fatal("expected negative url-upload-max-bytes to be rejected")
+	}
+	if err := validateOptions(0, -1, 0); err == nil {
+		t.Fatal("expected negative download-max-bytes to be rejected")
+	}
+	if err := validateOptions(0, 0, -time.Second); err == nil {
+		t.Fatal("expected negative download-timeout to be rejected")
+	}
+}
+
+func TestValidateOptions_AcceptsZeroValues(t *testing.T) {
+	if err := validateOptions(0, 0, 0); err != nil {
+		t.Fatalf("expected zero values to be accepted: %v", err)
 	}
 }

@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/SheltonZhu/115driver/mcp/server/tools"
 	"github.com/SheltonZhu/115driver/pkg/driver"
@@ -11,9 +12,14 @@ import (
 
 // Server represents the 115driver MCP server
 type Server struct {
-	mcpServer       *mcp.Server
-	client          *driver.Pan115Client
-	defaultSaveDir  string
+	mcpServer         *mcp.Server
+	client            *driver.Pan115Client
+	defaultSaveDir    string
+	localRoot         string
+	downloadTimeout   time.Duration
+	urlUploadMaxBytes int64
+	downloadMaxBytes  int64
+	allowDestructive  bool
 }
 
 // NewServer creates a new 115driver MCP server
@@ -35,6 +41,31 @@ func (s *Server) WithClient(client *driver.Pan115Client) *Server {
 // WithDefaultSaveDir sets the default offline download directory name
 func (s *Server) WithDefaultSaveDir(dir string) *Server {
 	s.defaultSaveDir = dir
+	return s
+}
+
+// WithLocalRoot restricts local file tools to paths under root. Empty disables them.
+func (s *Server) WithLocalRoot(root string) *Server {
+	s.localRoot = root
+	return s
+}
+
+// WithDownloadTimeout sets the total timeout for MCP HTTP transfers. Zero disables it.
+func (s *Server) WithDownloadTimeout(timeout time.Duration) *Server {
+	s.downloadTimeout = timeout
+	return s
+}
+
+// WithTransferSizeLimits sets size limits for MCP HTTP transfers. Zero disables a limit.
+func (s *Server) WithTransferSizeLimits(urlUploadMaxBytes, downloadMaxBytes int64) *Server {
+	s.urlUploadMaxBytes = urlUploadMaxBytes
+	s.downloadMaxBytes = downloadMaxBytes
+	return s
+}
+
+// WithDestructiveTools controls MCP tools that mutate 115 cloud state.
+func (s *Server) WithDestructiveTools(allow bool) *Server {
+	s.allowDestructive = allow
 	return s
 }
 
@@ -62,11 +93,18 @@ func (s *Server) registerTools() {
 	dirTools.RegisterTools(s.mcpServer)
 
 	// Register file tools
-	fileTools := tools.NewFileTools(s.client)
+	fileTools := tools.NewFileTools(
+		s.client,
+		tools.WithLocalRoot(s.localRoot),
+		tools.WithDownloadTimeout(s.downloadTimeout),
+		tools.WithURLUploadMaxBytes(s.urlUploadMaxBytes),
+		tools.WithDownloadMaxBytes(s.downloadMaxBytes),
+		tools.WithDestructiveTools(s.allowDestructive),
+	)
 	fileTools.RegisterTools(s.mcpServer)
 
 	// Register recycle tools
-	recycleTools := tools.NewRecycleTools(s.client)
+	recycleTools := tools.NewRecycleTools(s.client, tools.WithRecycleDestructiveTools(s.allowDestructive))
 	recycleTools.RegisterTools(s.mcpServer)
 
 	// Register share tools
@@ -78,6 +116,9 @@ func (s *Server) registerTools() {
 	searchTools.RegisterTools(s.mcpServer)
 
 	// Register offline tools
-	offlineTools := tools.NewOfflineTools(s.client, s.defaultSaveDir)
+	offlineTools := tools.NewOfflineTools(s.client,
+		tools.WithOfflineDefaultSaveDir(s.defaultSaveDir),
+		tools.WithOfflineDestructiveTools(s.allowDestructive),
+	)
 	offlineTools.RegisterTools(s.mcpServer)
 }

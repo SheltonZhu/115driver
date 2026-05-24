@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -25,7 +26,11 @@ var rmCmd = &cobra.Command{
 			return &exitError{code: output.ExitNotFound, msg: err.Error()}
 		}
 
-		if isDir && !jsonOutput {
+		if err := validateDeleteConfirmation(isDir, jsonOutput, rmForce); err != nil {
+			return &exitError{code: output.ExitArgs, msg: err.Error()}
+		}
+
+		if isDir && !jsonOutput && !rmForce {
 			fmt.Printf("Delete directory %s and all its contents? [y/N] ", remotePath)
 			reader := bufio.NewReader(os.Stdin)
 			resp, _ := reader.ReadString('\n')
@@ -52,6 +57,19 @@ var rmCmd = &cobra.Command{
 }
 
 func init() {
-	rmCmd.Flags().BoolVarP(&rmForce, "force", "f", false, "Reserved for future permanent delete")
+	rmCmd.Flags().BoolVarP(&rmForce, "force", "f", false, "Skip confirmation for directory deletes")
 	rootCmd.AddCommand(rmCmd)
+}
+
+func validateDeleteConfirmation(isDir, jsonOutput, force bool) error {
+	if !isDir {
+		return nil
+	}
+	if force {
+		return nil
+	}
+	if jsonOutput {
+		return errors.New("directory delete requires --force when using --json")
+	}
+	return nil
 }
