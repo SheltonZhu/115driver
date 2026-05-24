@@ -17,7 +17,10 @@ const RootID = "0"
 type pathResolverClient interface {
 	DirName2CID(dir string) (*driver.APIGetDirIDResp, error)
 	List(dirID string, opts ...driver.ListOption) (*[]driver.File, error)
+	ListPage(dirID string, offset, limit int64, opts ...driver.ListOption) (*[]driver.File, error)
 }
+
+const fileResolvePageLimit int64 = 100
 
 func ResolveDir(client pathResolverClient, remotePath string) (string, error) {
 	if remotePath == "" || remotePath == "/" {
@@ -59,14 +62,21 @@ func ResolveFile(client pathResolverClient, remotePath string) (string, error) {
 		}
 	}
 
-	files, err := client.List(dirID)
-	if err != nil {
-		return "", fmt.Errorf("failed to list directory: %w", err)
-	}
-
-	for _, f := range *files {
-		if f.Name == fileName && !f.IsDirectory {
-			return f.FileID, nil
+	for offset := int64(0); ; offset += fileResolvePageLimit {
+		files, err := client.ListPage(dirID, offset, fileResolvePageLimit)
+		if err != nil {
+			return "", fmt.Errorf("failed to list directory: %w", err)
+		}
+		if len(*files) == 0 {
+			break
+		}
+		for _, f := range *files {
+			if f.Name == fileName && !f.IsDirectory {
+				return f.FileID, nil
+			}
+		}
+		if int64(len(*files)) < fileResolvePageLimit {
+			break
 		}
 	}
 	return "", fmt.Errorf("file not found: %s", remotePath)
@@ -102,10 +112,6 @@ func ResolveLocalDownloadPath(localTarget, fileName string) string {
 
 	if strings.HasSuffix(localTarget, string(filepath.Separator)) {
 		return filepath.Join(strings.TrimSuffix(localTarget, string(filepath.Separator)), fileName)
-	}
-
-	if filepath.Ext(filepath.Base(localTarget)) == "" {
-		return filepath.Join(localTarget, fileName)
 	}
 
 	return localTarget

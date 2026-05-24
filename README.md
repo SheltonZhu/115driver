@@ -193,10 +193,15 @@ Additional env vars: `DRIVER115_CONFIG` (config path), `DRIVER115_PROFILE` (prof
 115driver cp /source/file /dest/dir
 115driver rename /path/to/file new_name
 115driver rm /path/to/file
+115driver rm /path/to/dir --force      # required for directory deletes in --json mode
+
+# List directory contents
+115driver ls /remote/dir --limit 100 --offset 0
 
 # Upload & Download
 115driver upload /local/file /remote/dir
 115driver download /remote/file /local/dir
+115driver download /remote/file /local/dir --timeout 6h  # default 2h, 0 disables timeout
 
 # Search
 115driver search keyword
@@ -261,7 +266,22 @@ mcp --cookie="UID=xxx;CID=xxx;SEID=xxx;KID=xxx"
 
 # If built from source:
 ./115driver-mcp-server --cookie="UID=xxx;CID=xxx;SEID=xxx;KID=xxx"
+
+# Allow longer MCP HTTP transfers:
+./115driver-mcp-server --cookie="UID=xxx;CID=xxx;SEID=xxx;KID=xxx" --download-timeout=6h
+
+# Optional MCP transfer size limits:
+# download_file is unlimited by default; upload_from_url defaults to 2 GiB.
+./115driver-mcp-server --cookie="UID=xxx;CID=xxx;SEID=xxx;KID=xxx" --download-max-bytes=0 --url-upload-max-bytes=10737418240
+
+# Register tools that mutate 115 cloud state:
+./115driver-mcp-server --cookie="UID=xxx;CID=xxx;SEID=xxx;KID=xxx" --allow-destructive-tools
 ```
+
+By default, the MCP server only registers read-only cloud tools plus
+`download_file`, which requires `--local-root` before it can write locally.
+Tools that create, upload, move, rename, delete, clean recycle bin items, or
+add/remove offline tasks require `--allow-destructive-tools`.
 
 ### Available Tools
 
@@ -269,11 +289,11 @@ mcp --cookie="UID=xxx;CID=xxx;SEID=xxx;KID=xxx"
 |----------|-------|
 | **Account** | `getAccountInfo` |
 | **Directory** | `listDirectory` |
-| **File** | `stat`, `mkdir`, `delete`, `rename`, `move`, `copy`, `upload_from_url`, `upload_from_local`, `download_file`, `get_download_info` |
+| **File** | `stat`, `download_file`, `get_download_info`; with `--allow-destructive-tools`: `mkdir`, `delete`, `rename`, `move`, `copy`, `upload_from_url`, `upload_from_local` |
 | **Search** | `search` |
-| **Offline** | `listOfflineTasks`, `addOfflineTaskURIs`, `deleteOfflineTasks`, `clearOfflineTasks` |
+| **Offline** | `listOfflineTasks`; with `--allow-destructive-tools`: `addOfflineTaskURIs`, `deleteOfflineTasks`, `clearOfflineTasks` |
 | **Share** | `getShareSnap` |
-| **Recycle** | `listRecycleBin`, `revertRecycleBin`, `cleanRecycleBin` |
+| **Recycle** | `listRecycleBin`; with `--allow-destructive-tools`: `revertRecycleBin`, `cleanRecycleBin` |
 
 ### Configure with Claude Desktop
 

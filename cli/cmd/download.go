@@ -6,12 +6,17 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/SheltonZhu/115driver/cli/internal/output"
 	"github.com/SheltonZhu/115driver/cli/internal/resolver"
 	"github.com/SheltonZhu/115driver/pkg/driver"
 	"github.com/spf13/cobra"
 )
+
+const defaultDownloadTimeout = 2 * time.Hour
+
+var downloadTimeout = defaultDownloadTimeout
 
 var downloadCmd = &cobra.Command{
 	Use:   "download <remote_path> <local_path>",
@@ -76,7 +81,7 @@ func downloadFile(dlInfo *driver.DownloadInfo, localPath string) error {
 		}
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := newDownloadHTTPClient(downloadTimeout).Do(req)
 	if err != nil {
 		return fmt.Errorf("download request: %w", err)
 	}
@@ -100,6 +105,11 @@ func resolveDownloadTargetPath(localTarget, fileName string) string {
 	return resolver.ResolveLocalDownloadPath(localTarget, fileName)
 }
 
+func newDownloadHTTPClient(timeout time.Duration) *http.Client {
+	return &http.Client{Timeout: timeout}
+}
+
 func init() {
+	downloadCmd.Flags().DurationVar(&downloadTimeout, "timeout", defaultDownloadTimeout, "Download timeout, use 0 to disable")
 	rootCmd.AddCommand(downloadCmd)
 }

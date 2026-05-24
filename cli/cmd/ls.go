@@ -7,6 +7,13 @@ import (
 )
 
 var lsLong bool
+var lsOffset int64
+var lsLimit int64
+
+const (
+	defaultLSLimit int64 = 100
+	maxLSLimit     int64 = 500
+)
 
 var lsCmd = &cobra.Command{
 	Use:   "ls [remote_path]",
@@ -23,7 +30,8 @@ var lsCmd = &cobra.Command{
 			return &exitError{code: output.ExitNotFound, msg: err.Error()}
 		}
 
-		files, err := client.List(dirID)
+		offset, limit := normalizeLSPage(lsOffset, lsLimit)
+		files, err := client.ListPage(dirID, offset, limit)
 		if err != nil {
 			return &exitError{code: output.ExitError, msg: err.Error()}
 		}
@@ -44,5 +52,20 @@ var lsCmd = &cobra.Command{
 
 func init() {
 	lsCmd.Flags().BoolVarP(&lsLong, "long", "l", false, "Show detailed listing")
+	lsCmd.Flags().Int64Var(&lsOffset, "offset", 0, "Offset for paginated listing")
+	lsCmd.Flags().Int64Var(&lsLimit, "limit", defaultLSLimit, "Max items to list")
 	rootCmd.AddCommand(lsCmd)
+}
+
+func normalizeLSPage(offset, limit int64) (int64, int64) {
+	if offset < 0 {
+		offset = 0
+	}
+	if limit <= 0 {
+		limit = defaultLSLimit
+	}
+	if limit > maxLSLimit {
+		limit = maxLSLimit
+	}
+	return offset, limit
 }

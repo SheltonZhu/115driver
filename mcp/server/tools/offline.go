@@ -11,14 +11,27 @@ import (
 
 // OfflineTools holds offline-related MCP tools
 type OfflineTools struct {
-	client *driver.Pan115Client
+	client           *driver.Pan115Client
+	allowDestructive bool
+}
+
+type OfflineToolsOption func(*OfflineTools)
+
+func WithOfflineDestructiveTools(allow bool) OfflineToolsOption {
+	return func(ot *OfflineTools) {
+		ot.allowDestructive = allow
+	}
 }
 
 // NewOfflineTools creates a new OfflineTools instance
-func NewOfflineTools(client *driver.Pan115Client) *OfflineTools {
-	return &OfflineTools{
+func NewOfflineTools(client *driver.Pan115Client, opts ...OfflineToolsOption) *OfflineTools {
+	ot := &OfflineTools{
 		client: client,
 	}
+	for _, opt := range opts {
+		opt(ot)
+	}
+	return ot
 }
 
 // ListOfflineTaskArgs defines arguments for listing offline tasks
@@ -50,20 +63,22 @@ func (ot *OfflineTools) RegisterTools(server *mcp.Server) {
 		Description: "List offline download tasks",
 	}, ot.listOfflineTasks)
 
-	mcp.AddTool(server, &mcp.Tool{
-		Name:        "addOfflineTaskURIs",
-		Description: "Add offline tasks by download URIs, supports http, ed2k, magnet",
-	}, ot.addOfflineTaskURIs)
+	if ot.allowDestructive {
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "addOfflineTaskURIs",
+			Description: "Add offline tasks by download URIs, supports http, ed2k, magnet",
+		}, ot.addOfflineTaskURIs)
 
-	mcp.AddTool(server, &mcp.Tool{
-		Name:        "deleteOfflineTasks",
-		Description: "Delete offline tasks",
-	}, ot.deleteOfflineTasks)
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "deleteOfflineTasks",
+			Description: "Delete offline tasks",
+		}, ot.deleteOfflineTasks)
 
-	mcp.AddTool(server, &mcp.Tool{
-		Name:        "clearOfflineTasks",
-		Description: "Clear offline tasks",
-	}, ot.clearOfflineTasks)
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "clearOfflineTasks",
+			Description: "Clear offline tasks",
+		}, ot.clearOfflineTasks)
+	}
 }
 
 func (ot *OfflineTools) listOfflineTasks(ctx context.Context, req *mcp.CallToolRequest, args ListOfflineTaskArgs) (*mcp.CallToolResult, any, error) {
