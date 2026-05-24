@@ -842,7 +842,10 @@ func validateLocalPath(root, target string, mustExist bool) (string, error) {
 
 	pathToCheck := absTarget
 	if !mustExist && !pathExists(absTarget) {
-		pathToCheck = filepath.Dir(absTarget)
+		pathToCheck, err = nearestExistingPath(filepath.Dir(absTarget))
+		if err != nil {
+			return "", err
+		}
 	}
 	realCheck, err := filepath.EvalSymlinks(pathToCheck)
 	if err != nil {
@@ -860,6 +863,19 @@ func validateLocalPath(root, target string, mustExist bool) (string, error) {
 		return "", errors.New("path escapes local root")
 	}
 	return absTarget, nil
+}
+
+func nearestExistingPath(path string) (string, error) {
+	for {
+		if pathExists(path) {
+			return path, nil
+		}
+		parent := filepath.Dir(path)
+		if parent == path {
+			return "", fmt.Errorf("no existing parent for %q", path)
+		}
+		path = parent
+	}
 }
 
 func pathExists(path string) bool {

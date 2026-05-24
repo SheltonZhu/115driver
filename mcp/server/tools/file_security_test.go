@@ -82,6 +82,20 @@ func TestValidateLocalPathRejectsExistingSymlinkFileOutsideRoot(t *testing.T) {
 	}
 }
 
+func TestValidateLocalPathRejectsMissingPathUnderSymlinkedParentOutsideRoot(t *testing.T) {
+	root := t.TempDir()
+	outside := t.TempDir()
+	link := filepath.Join(root, "link")
+	if err := os.Symlink(outside, link); err != nil {
+		t.Fatal(err)
+	}
+	target := filepath.Join(link, "missing", "file.txt")
+
+	if _, err := validateLocalPath(root, target, false); err == nil {
+		t.Fatal("expected missing path below external symlink parent to be rejected")
+	}
+}
+
 func TestCopyHTTPResponseRequiresStatusOK(t *testing.T) {
 	var out strings.Builder
 	resp := &http.Response{
