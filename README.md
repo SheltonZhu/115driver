@@ -357,6 +357,13 @@ Contributions are welcome! Please feel free to submit a Pull Request.
         </a>
     </td>
     <td align="center">
+        <a href="https://github.com/power721">
+            <img src="https://avatars.githubusercontent.com/u/2384040?v=4" width="100;" alt="power721"/>
+            <br />
+            <sub><b>power721</b></sub>
+        </a>
+    </td>
+    <td align="center">
         <a href="https://github.com/xhofe">
             <img src="https://avatars.githubusercontent.com/u/36558727?v=4" width="100;" alt="xhofe"/>
             <br />
@@ -368,13 +375,6 @@ Contributions are welcome! Please feel free to submit a Pull Request.
             <img src="https://avatars.githubusercontent.com/u/1362137?v=4" width="100;" alt="Ovear"/>
             <br />
             <sub><b>Ovear</b></sub>
-        </a>
-    </td>
-    <td align="center">
-        <a href="https://github.com/power721">
-            <img src="https://avatars.githubusercontent.com/u/2384040?v=4" width="100;" alt="power721"/>
-            <br />
-            <sub><b>power721</b></sub>
         </a>
     </td></tr>
 </table>
