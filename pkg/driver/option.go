@@ -31,6 +31,10 @@ func WithClient(hc *http.Client) Option {
 func WithRestyClient(resty *resty.Client) Option {
 	return func(c *Pan115Client) {
 		c.Client = resty
+		// The new client does not have the empty-UA handling hooks
+		// installed; re-install them (see applyEmptyUAHandling).
+		c.uaHandlingDone = false
+		c.applyEmptyUAHandling()
 	}
 }
 

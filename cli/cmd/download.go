@@ -6,12 +6,17 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/SheltonZhu/115driver/cli/internal/output"
 	"github.com/SheltonZhu/115driver/cli/internal/resolver"
 	"github.com/SheltonZhu/115driver/pkg/driver"
 	"github.com/spf13/cobra"
 )
+
+const defaultDownloadTimeout = 2 * time.Hour
+
+var downloadTimeout = defaultDownloadTimeout
 
 var downloadCmd = &cobra.Command{
 	Use:   "download <remote_path> <local_path>",
@@ -20,6 +25,9 @@ var downloadCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		remotePath := args[0]
 		localTarget := args[1]
+		if err := validateDownloadTimeout(downloadTimeout); err != nil {
+			return &exitError{code: output.ExitArgs, msg: err.Error()}
+		}
 
 		fileID, _, err := resolver.ResolvePath(client, remotePath)
 		if err != nil {
@@ -76,7 +84,7 @@ func downloadFile(dlInfo *driver.DownloadInfo, localPath string) error {
 		}
 	}
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := newDownloadHTTPClient(downloadTimeout).Do(req)
 	if err != nil {
 		return fmt.Errorf("download request: %w", err)
 	}
@@ -86,20 +94,58 @@ func downloadFile(dlInfo *driver.DownloadInfo, localPath string) error {
 		return fmt.Errorf("download failed: HTTP %d", resp.StatusCode)
 	}
 
-	out, err := os.Create(localPath)
-	if err != nil {
-		return err
-	}
-	defer out.Close()
-
-	_, err = io.Copy(out, resp.Body)
-	return err
+	return saveDownloadResponse(localPath, resp, 0)
 }
 
 func resolveDownloadTargetPath(localTarget, fileName string) string {
 	return resolver.ResolveLocalDownloadPath(localTarget, fileName)
 }
 
+func newDownloadHTTPClient(timeout time.Duration) *http.Client {
+	return &http.Client{Timeout: timeout}
+}
+
+func validateDownloadTimeout(timeout time.Duration) error {
+	if timeout < 0 {
+		return fmt.Errorf("timeout must be >= 0")
+	}
+	return nil
+}
+
+func saveDownloadResponse(localPath string, resp *http.Response, maxBytes int64) error {
+	if err := os.MkdirAll(filepath.Dir(localPath), 0755); err != nil {
+		return err
+	}
+	tmp, err := os.CreateTemp(filepath.Dir(localPath), "."+filepath.Base(localPath)+".*")
+	if err != nil {
+		return err
+	}
+	tmpPath := tmp.Name()
+	defer os.Remove(tmpPath)
+
+	var copyErr error
+	if maxBytes > 0 {
+		limited := &io.LimitedReader{R: resp.Body, N: maxBytes + 1}
+		written, err := io.Copy(tmp, limited)
+		if err != nil {
+			copyErr = err
+		} else if written > maxBytes || limited.N == 0 {
+			copyErr = fmt.Errorf("download exceeds limit of %d bytes", maxBytes)
+		}
+	} else {
+		_, copyErr = io.Copy(tmp, resp.Body)
+	}
+	if copyErr != nil {
+		tmp.Close()
+		return copyErr
+	}
+	if err := tmp.Close(); err != nil {
+		return err
+	}
+	return os.Rename(tmpPath, localPath)
+}
+
 func init() {
+	downloadCmd.Flags().DurationVar(&downloadTimeout, "timeout", defaultDownloadTimeout, "Download timeout, use 0 to disable")
 	rootCmd.AddCommand(downloadCmd)
 }

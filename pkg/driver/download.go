@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	crypto "github.com/SheltonZhu/115driver/pkg/crypto/m115"
+	"github.com/go-resty/resty/v2"
 )
 
 type FileDownloadUrl struct {
@@ -100,7 +101,7 @@ func (c *Pan115Client) DownloadWithUA(pickCode, ua string) (*DownloadInfo, error
 		if info.FileSize < 0 {
 			return nil, ErrDownloadEmpty
 		}
-		info.Header = buildDownloadHeaders(resp.Request.Header, resp.Cookies())
+		info.Header = buildDownloadHeaders(sentRequestHeaders(resp), resp.Cookies())
 		return info, nil
 	}
 	return nil, ErrUnexpected
@@ -145,10 +146,23 @@ func (c *Pan115Client) DownloadWithUAByAndroidAPI(pickCode string, ua string) (*
 			Url: infoResp.URL,
 		},
 		PickCode: pickCode,
-		Header:   buildDownloadHeaders(resp.Request.Header, resp.Cookies()),
+		Header:   buildDownloadHeaders(sentRequestHeaders(resp), resp.Cookies()),
 	}
 
 	return &info, nil
+}
+
+// sentRequestHeaders returns the request headers that were actually sent on
+// the wire. resty keeps its own header map (exposed as resp.Request.Header)
+// separate from RawRequest.Header — a deep copy made by createHTTPRequest —
+// and the empty-UA sentinel is stripped from RawRequest only. Reading the
+// raw request headers here is the source of truth for what the peer
+// received, and matches the empty-UA handling in applyEmptyUAHandling.
+func sentRequestHeaders(resp *resty.Response) http.Header {
+	if resp == nil || resp.Request == nil || resp.Request.RawRequest == nil {
+		return nil
+	}
+	return resp.Request.RawRequest.Header
 }
 
 // Download get download info with pickcode
@@ -157,6 +171,9 @@ func (c *Pan115Client) Download(pickCode string) (*DownloadInfo, error) {
 }
 
 func buildDownloadHeaders(requestHeaders http.Header, responseCookies []*http.Cookie) http.Header {
+	if requestHeaders == nil {
+		requestHeaders = http.Header{}
+	}
 	headers := requestHeaders.Clone()
 	if len(responseCookies) == 0 {
 		return headers
