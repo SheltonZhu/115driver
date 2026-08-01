@@ -95,6 +95,42 @@ defer fileReader.Close()
 // write fileReader to file...
 ```
 
+#### Empty User-Agent (UA-free CDN downloads)
+
+115 CDN download links returned by `DownloadWithUA` may be bound to the
+User-Agent used to fetch them, so tools that fetch the links without a UA
+(e.g. mediainfo, openlist) require the request to carry **no** `User-Agent`
+header at all (see [issue #80](https://github.com/SheltonZhu/115driver/issues/80)):
+
+```go
+// Fetch the download-URL request with no User-Agent header on the wire
+info, err := client.DownloadWithUA(pickCode, "")
+// info.Header["User-Agent"] is empty, matching what was actually sent
+```
+
+This is implemented client-wide in `applyEmptyUAHandling`
+(`pkg/driver/client.go`) and is intentionally ad-hoc because resty provides
+no option to omit its default `go-resty/<version>` User-Agent:
+
+1. An explicitly empty UA (empty string, whitespace, or nil header value) is
+   replaced with an internal sentinel before resty's middleware runs, so
+   resty does not inject its default UA.
+2. The sentinel is stripped from the wire request right before sending — the
+   actual bytes carry no `User-Agent` header.
+3. resty deep-copies request headers into the raw HTTP request, so its own
+   `resp.Request.Header` keeps the sentinel internally; it is realigned to
+   the actually-sent value after each response, and `DownloadInfo.Header`
+   reads the raw sent request headers.
+
+Notes:
+
+- Do not re-add a UA to `DownloadInfo.Header` after the call, and do not
+  "clean up" the returned header manually — both would mask the wire
+  behavior.
+- `SetHttpClient` and `WithRestyClient` replace the underlying resty client;
+  the hooks are re-installed automatically, so empty-UA handling keeps
+  working for every client configuration.
+
 ```go
 // Upload a file (auto-selects rapid upload or multipart via OSS)
 file, _ := os.Open("/path/to/local/file.zip")
