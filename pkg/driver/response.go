@@ -276,8 +276,8 @@ type FileStatResponse struct {
 	Paths       []*FileParentInfo `json:"paths"`
 }
 type FileParentInfo struct {
-	FileID   int    `json:"file_id"`
-	FileName string `json:"file_name"`
+	FileID   StringInt `json:"file_id"`
+	FileName string    `json:"file_name"`
 }
 
 func (r *FileStatResponse) Err(respBody ...string) error {
