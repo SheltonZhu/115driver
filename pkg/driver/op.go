@@ -1,6 +1,7 @@
 package driver
 
 import (
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -26,15 +27,40 @@ func (c *Pan115Client) Delete(fileIDs ...string) error {
 	return CheckErr(err, &result, resp)
 }
 
-// Rename rename a file or directory with file id and name
+// RenameItem describes a file or directory rename.
+type RenameItem struct {
+	FileID  string `json:"file_id"`
+	NewName string `json:"new_name"`
+}
+
+// Rename renames a file or directory by ID.
 func (c *Pan115Client) Rename(fileID, newName string) error {
+	return c.BatchRename(RenameItem{FileID: fileID, NewName: newName})
+}
+
+// BatchRename renames files or directories in a single request.
+func (c *Pan115Client) BatchRename(items ...RenameItem) error {
 	if isCalledByAlistV3() {
 		return ErrorNotSupportAlist
 	}
-	form := map[string]string{
-		"fid":       fileID,
-		"file_name": newName,
-		fmt.Sprintf("files_new_name[%s]", fileID): newName,
+	if len(items) == 0 {
+		return nil
+	}
+
+	form := map[string]string{"format": "json"}
+	seen := make(map[string]struct{}, len(items))
+	for _, item := range items {
+		if item.FileID == "" {
+			return errors.New("file ID cannot be empty")
+		}
+		if item.NewName == "" {
+			return errors.New("new name cannot be empty")
+		}
+		if _, ok := seen[item.FileID]; ok {
+			return fmt.Errorf("duplicate file ID: %s", item.FileID)
+		}
+		seen[item.FileID] = struct{}{}
+		form[fmt.Sprintf("files_new_name[%s]", item.FileID)] = item.NewName
 	}
 
 	result := BasicResp{}

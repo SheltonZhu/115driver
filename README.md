@@ -228,6 +228,7 @@ Additional env vars: `DRIVER115_CONFIG` (config path), `DRIVER115_PROFILE` (prof
 115driver mv /source/file /dest/dir
 115driver cp /source/file /dest/dir
 115driver rename /path/to/file new_name
+115driver rename /path/to/a new_a /path/to/b new_b
 115driver rm /path/to/file
 115driver rm /path/to/dir --force      # required for directory deletes in --json mode
 
@@ -334,7 +335,7 @@ an earlier address cannot be reached.
 |----------|-------|
 | **Account** | `getAccountInfo` |
 | **Directory** | `listDirectory` |
-| **File** | `stat`, `download_file`, `get_download_info`; with `--allow-destructive-tools`: `mkdir`, `delete`, `rename`, `move`, `copy`, `upload_from_url`, `upload_from_local` |
+| **File** | `stat`, `download_file`, `get_download_info`; with `--allow-destructive-tools`: `mkdir`, `delete`, `rename`, `batch_rename`, `move`, `copy`, `upload_from_url`, `upload_from_local` |
 | **Search** | `search` |
 | **Offline** | `listOfflineTasks`; with `--allow-destructive-tools`: `addOfflineTaskURIs`, `deleteOfflineTasks`, `clearOfflineTasks` |
 | **Share** | `getShareSnap` |

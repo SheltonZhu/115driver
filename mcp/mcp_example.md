@@ -86,40 +86,44 @@ mutations:
      - `file_id` (string): ID of file or directory to rename
      - `new_name` (string): New name for the file or directory
 
-3. `move`: Move files or directories to another directory. Requires `--allow-destructive-tools`.
+3. `batch_rename`: Rename multiple files or directories in one request. Requires `--allow-destructive-tools`.
+   - Parameters:
+     - `renames` (array): Objects containing `file_id` and `new_name`
+
+4. `move`: Move files or directories to another directory. Requires `--allow-destructive-tools`.
    - Parameters:
      - `dir_id` (string): Target directory ID
      - `file_ids` (array of strings): IDs of files or directories to move
 
-4. `copy`: Copy files or directories to another directory. Requires `--allow-destructive-tools`.
+5. `copy`: Copy files or directories to another directory. Requires `--allow-destructive-tools`.
    - Parameters:
      - `dir_id` (string): Target directory ID
      - `file_ids` (array of strings): IDs of files or directories to copy
 
-5. `stat`: Get detailed information about a file or directory
+6. `stat`: Get detailed information about a file or directory
    - Parameters:
      - `file_id` (string): ID of file or directory to get info
 
-6. `download_file`: Download a file from 115 cloud storage to a local path.
+7. `download_file`: Download a file from 115 cloud storage to a local path.
    Requires `--local-root`.
    - Parameters:
      - `pick_code` (string): Pick code of the file to download
      - `local_path` (string): Local path under `--local-root`
      - `user_agent` (string): Optional User-Agent
 
-7. `get_download_info`: Get a file download URL and metadata
+8. `get_download_info`: Get a file download URL and metadata
    - Parameters:
      - `pick_code` (string): Pick code of the file
      - `user_agent` (string): Optional User-Agent
 
-8. `upload_from_url`: Download a URL and upload it to 115 cloud storage.
+9. `upload_from_url`: Download a URL and upload it to 115 cloud storage.
    Requires `--allow-destructive-tools`.
    - Parameters:
      - `url` (string): HTTP or HTTPS URL to download
      - `dir_id` (string): Target 115 directory ID
      - `file_name` (string): Optional destination file name
 
-9. `upload_from_local`: Upload a local file to 115 cloud storage.
+10. `upload_from_local`: Upload a local file to 115 cloud storage.
    Requires `--allow-destructive-tools` and `--local-root`.
    - Parameters:
      - `local_path` (string): Local file path under `--local-root`
