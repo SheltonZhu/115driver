@@ -176,7 +176,7 @@ func (c *Pan115Client) Stat(fileID string) (*FileStatInfo, error) {
 	info.Parents = make([]*DirInfo, len(result.Paths))
 	for i, path := range result.Paths {
 		info.Parents[i] = &DirInfo{
-			ID:   strconv.Itoa(path.FileID),
+			ID:   strconv.FormatInt(int64(path.FileID), 10),
 			Name: path.FileName,
 		}
 	}
