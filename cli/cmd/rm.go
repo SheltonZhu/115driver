@@ -15,23 +15,33 @@ import (
 var rmForce bool
 
 var rmCmd = &cobra.Command{
-	Use:   "rm <remote_path>",
+	Use:   "rm <remote_path>...",
 	Short: "Delete file or directory (moves to recycle bin)",
-	Args:  cobra.ExactArgs(1),
+	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		remotePath := args[0]
-
-		fileID, isDir, err := resolver.ResolvePath(client, remotePath)
-		if err != nil {
-			return &exitError{code: output.ExitNotFound, msg: err.Error()}
+		fileIDs := make([]string, len(args))
+		directoryCount := 0
+		for i, remotePath := range args {
+			fileID, isDir, err := resolver.ResolvePath(client, remotePath)
+			if err != nil {
+				return &exitError{code: output.ExitNotFound, msg: err.Error()}
+			}
+			fileIDs[i] = fileID
+			if isDir {
+				directoryCount++
+			}
 		}
 
-		if err := validateDeleteConfirmation(isDir, jsonOutput, rmForce); err != nil {
+		if err := validateDeleteConfirmation(directoryCount > 0, jsonOutput, rmForce); err != nil {
 			return &exitError{code: output.ExitArgs, msg: err.Error()}
 		}
 
-		if isDir && !jsonOutput && !rmForce {
-			fmt.Printf("Delete directory %s and all its contents? [y/N] ", remotePath)
+		if directoryCount > 0 && !jsonOutput && !rmForce {
+			directoryWord := "directories"
+			if directoryCount == 1 {
+				directoryWord = "directory"
+			}
+			fmt.Printf("Delete %d item(s), including %d %s? [y/N] ", len(args), directoryCount, directoryWord)
 			reader := bufio.NewReader(os.Stdin)
 			resp, _ := reader.ReadString('\n')
 			resp = strings.TrimSpace(strings.ToLower(resp))
@@ -41,16 +51,18 @@ var rmCmd = &cobra.Command{
 			}
 		}
 
-		if err := client.Delete(fileID); err != nil {
+		if err := client.Delete(fileIDs...); err != nil {
 			return &exitError{code: output.ExitError, msg: err.Error()}
 		}
 
 		printer.PrintSuccess(map[string]interface{}{
-			"deleted":  []string{remotePath},
-			"file_ids": []string{fileID},
+			"deleted":  args,
+			"file_ids": fileIDs,
 		})
 		if !jsonOutput {
-			fmt.Printf("Deleted: %s\n", remotePath)
+			for _, remotePath := range args {
+				fmt.Printf("Deleted: %s\n", remotePath)
+			}
 		}
 		return nil
 	},

@@ -102,6 +102,11 @@ type RenameArgs struct {
 	NewName string `json:"new_name" jsonschema:"new name for the file or directory"`
 }
 
+// BatchRenameArgs defines arguments for the batch rename tool.
+type BatchRenameArgs struct {
+	Renames []driver.RenameItem `json:"renames" jsonschema:"files or directories to rename"`
+}
+
 // MoveArgs defines arguments for move tool
 type MoveArgs struct {
 	DirID   string   `json:"dir_id" jsonschema:"target directory ID"`
@@ -175,6 +180,11 @@ func (ft *FileTools) RegisterTools(server *mcp.Server) {
 			Name:        "rename",
 			Description: "Rename a file or directory",
 		}, ft.rename)
+
+		mcp.AddTool(server, &mcp.Tool{
+			Name:        "batch_rename",
+			Description: "Rename multiple files or directories in one request",
+		}, ft.batchRename)
 
 		mcp.AddTool(server, &mcp.Tool{
 			Name:        "move",
@@ -287,12 +297,24 @@ func (ft *FileTools) delete(ctx context.Context, req *mcp.CallToolRequest, args 
 }
 
 func (ft *FileTools) rename(ctx context.Context, req *mcp.CallToolRequest, args RenameArgs) (*mcp.CallToolResult, any, error) {
-	err := ft.client.Rename(args.FileID, args.NewName)
+	return ft.renameItems(driver.RenameItem{FileID: args.FileID, NewName: args.NewName})
+}
+
+func (ft *FileTools) batchRename(ctx context.Context, req *mcp.CallToolRequest, args BatchRenameArgs) (*mcp.CallToolResult, any, error) {
+	return ft.renameItems(args.Renames...)
+}
+
+func (ft *FileTools) renameItems(items ...driver.RenameItem) (*mcp.CallToolResult, any, error) {
+	if len(items) == 0 {
+		return toolError("No renames provided"), nil, nil
+	}
+
+	err := ft.client.BatchRename(items...)
 	if err != nil {
 		return &mcp.CallToolResult{
 			Content: []mcp.Content{
 				&mcp.TextContent{
-					Text: fmt.Sprintf("Failed to rename file: %v", err),
+					Text: fmt.Sprintf("Failed to rename files: %v", err),
 				},
 			},
 			IsError: true,
@@ -302,7 +324,7 @@ func (ft *FileTools) rename(ctx context.Context, req *mcp.CallToolRequest, args 
 	return &mcp.CallToolResult{
 		Content: []mcp.Content{
 			&mcp.TextContent{
-				Text: "File renamed successfully",
+				Text: fmt.Sprintf("Renamed %d file(s) successfully", len(items)),
 			},
 		},
 	}, nil, nil

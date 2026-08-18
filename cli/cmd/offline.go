@@ -18,12 +18,10 @@ var offlineCmd = &cobra.Command{
 }
 
 var offlineAddCmd = &cobra.Command{
-	Use:   "add <url>",
+	Use:   "add <url>...",
 	Short: "Add an offline download task",
-	Args:  cobra.ExactArgs(1),
+	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		url := args[0]
-
 		saveDirID := resolver.RootID
 		saveDirName := ""
 		if offlineSaveDir != "" {
@@ -46,18 +44,25 @@ var offlineAddCmd = &cobra.Command{
 			}
 		}
 
-		hashes, err := client.AddOfflineTaskURIs([]string{url}, saveDirID)
+		hashes, err := client.AddOfflineTaskURIs(args, saveDirID)
 		if err != nil {
 			return &exitError{code: output.ExitError, msg: err.Error()}
 		}
 
-		printer.PrintSuccess(map[string]interface{}{
-			"url":      url,
+		result := map[string]interface{}{
 			"hashes":   hashes,
 			"save_dir": saveDirName,
-		})
+		}
+		if len(args) == 1 {
+			result["url"] = args[0]
+		} else {
+			result["urls"] = args
+		}
+		printer.PrintSuccess(result)
 		if !jsonOutput {
-			fmt.Printf("Offline task added: %s\n", url)
+			for _, url := range args {
+				fmt.Printf("Offline task added: %s\n", url)
+			}
 		}
 		return nil
 	},
@@ -107,21 +112,21 @@ var offlineListCmd = &cobra.Command{
 }
 
 var offlineRmCmd = &cobra.Command{
-	Use:   "rm <hash>",
+	Use:   "rm <hash>...",
 	Short: "Remove an offline download task",
-	Args:  cobra.ExactArgs(1),
+	Args:  cobra.MinimumNArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		hash := args[0]
-
-		if err := client.DeleteOfflineTasks([]string{hash}, false); err != nil {
+		if err := client.DeleteOfflineTasks(args, false); err != nil {
 			return &exitError{code: output.ExitError, msg: err.Error()}
 		}
 
 		printer.PrintSuccess(map[string]interface{}{
-			"deleted_hashes": []string{hash},
+			"deleted_hashes": args,
 		})
 		if !jsonOutput {
-			fmt.Printf("Removed offline task: %s\n", hash)
+			for _, hash := range args {
+				fmt.Printf("Removed offline task: %s\n", hash)
+			}
 		}
 		return nil
 	},

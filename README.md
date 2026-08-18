@@ -226,9 +226,13 @@ Additional env vars: `DRIVER115_CONFIG` (config path), `DRIVER115_PROFILE` (prof
 
 # Move / Copy / Rename / Delete
 115driver mv /source/file /dest/dir
+115driver mv /source/file1 /source/file2 /dest/dir  # move multiple items in one request
 115driver cp /source/file /dest/dir
+115driver cp /source/file1 /source/file2 /dest/dir  # copy multiple items in one request
 115driver rename /path/to/file new_name
+115driver rename /path/to/a new_a /path/to/b new_b
 115driver rm /path/to/file
+115driver rm /path/to/file1 /path/to/file2
 115driver rm /path/to/dir --force      # required for directory deletes in --json mode
 
 # List directory contents
@@ -248,9 +252,10 @@ Additional env vars: `DRIVER115_CONFIG` (config path), `DRIVER115_PROFILE` (prof
 
 # Offline downloads (HTTP/ED2K/magnet)
 115driver offline add <url>
-115driver offline add <url> -d /save/dir
+115driver offline add <url1> <url2> -d /save/dir
 115driver offline list
 115driver offline rm <hash>
+115driver offline rm <hash1> <hash2>
 ```
 
 ### JSON Output
@@ -334,7 +339,7 @@ an earlier address cannot be reached.
 |----------|-------|
 | **Account** | `getAccountInfo` |
 | **Directory** | `listDirectory` |
-| **File** | `stat`, `download_file`, `get_download_info`; with `--allow-destructive-tools`: `mkdir`, `delete`, `rename`, `move`, `copy`, `upload_from_url`, `upload_from_local` |
+| **File** | `stat`, `download_file`, `get_download_info`; with `--allow-destructive-tools`: `mkdir`, `delete`, `rename`, `batch_rename`, `move`, `copy`, `upload_from_url`, `upload_from_local` |
 | **Search** | `search` |
 | **Offline** | `listOfflineTasks`; with `--allow-destructive-tools`: `addOfflineTaskURIs`, `deleteOfflineTasks`, `clearOfflineTasks` |
 | **Share** | `getShareSnap` |
