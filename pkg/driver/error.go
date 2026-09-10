@@ -1,6 +1,7 @@
 package driver
 
 import (
+	"encoding/json"
 	"strconv"
 	"strings"
 
@@ -11,6 +12,7 @@ import (
 var (
 	ErrorNotSupportAlist = errors.New("not support alist due to privacy risk, please use openlist: https://github.com/OpenListTeam/OpenList")
 )
+
 // cookie err
 var (
 	ErrBadCookie = errors.New("bad cookie")
@@ -80,7 +82,7 @@ var (
 	ErrPickCodeIsEmpty = errors.New("empty pickcode")
 
 	ErrPickCodeIsNotExistOrHasDeleted = errors.New("pickcode is not exist or has deleted")
-	
+
 	ErrUploadSH1Invalid = errors.New("userid/filesize/target/pickcode/ invalid")
 
 	ErrUploadSigInvalid = errors.New("sig invalid")
@@ -157,10 +159,27 @@ type ResultWithErr interface {
 
 func CheckErr(err error, result ResultWithErr, restyResp *resty.Response) error {
 	if err == nil {
-		err = result.Err(restyResp.String())
+		if msg := apiErrorString(restyResp.String()); msg != "" {
+			err = errors.New(msg)
+		} else {
+			err = result.Err(restyResp.String())
+		}
 	}
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+// apiErrorString reports failures that some 115 endpoints return as a
+// top-level string "error" field instead of the usual state/errno fields.
+func apiErrorString(body string) string {
+	var data map[string]interface{}
+	if json.Unmarshal([]byte(body), &data) != nil {
+		return ""
+	}
+	if msg, ok := data["error"].(string); ok {
+		return msg
+	}
+	return ""
 }
