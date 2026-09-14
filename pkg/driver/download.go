@@ -199,13 +199,14 @@ type SharedDownloadInfo struct {
 	FileID   string      `json:"fid"`
 	FileName string      `json:"fn"`
 	FileSize StringInt64 `json:"fs"`
+	Sha1     string      `json:"sha1"`
 	URL      struct {
-		URL    string `json:"url"`
-		Client int    `json:"client"`
-		Desc   any    `json:"desc"`
-		Isp    any    `json:"isp"`
-		OSSID  string `json:"oss_id"`
-		OOID   string `json:"ooid"`
+		URL    string  `json:"url"`
+		Client float64 `json:"client"`
+		Desc   any     `json:"desc"`
+		Isp    any     `json:"isp"`
+		OSSID  string  `json:"oss_id"`
+		OOID   string  `json:"ooid"`
 	} `json:"url"`
 }
 
@@ -214,31 +215,64 @@ func (c *Pan115Client) DownloadByShareCode(shareCode, receiveCode, fileID string
 	return c.DownloadByShareCodeWithUA("", shareCode, receiveCode, fileID)
 }
 
+// DownloadByShareCodeWithUA get download info with share code and user agent.
+//
+// It uses the app API (ApiDownloadShareDownurl) with an m115-encrypted payload.
+// The legacy web endpoint (ApiDownloadGetShareUrl) rejects third-party clients
+// with "当前版本过低，请升级到最新版本下载" since 2026-09. The returned CDN url
+// is not bound to the UA that requested it, so ua only selects the request UA
+// when it is itself a 115 client UA (see shareDownurlUA).
 func (c *Pan115Client) DownloadByShareCodeWithUA(ua, shareCode, receiveCode, fileID string) (*SharedDownloadInfo, error) {
 	if isCalledByAlistV3() {
 		return nil, ErrorNotSupportAlist
 	}
-	result := DownloadShareResp{}
-	params := map[string]string{
+	key := crypto.GenerateKey()
+
+	result := DownloadResp{}
+	params, err := json.Marshal(map[string]string{
 		"share_code":   shareCode,
 		"receive_code": receiveCode,
 		"file_id":      fileID,
-		"dl":           "1",
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	req := c.NewRequest().
-		SetQueryParams(params).
+		SetQueryParam("t", Now().String()).
+		SetFormData(map[string]string{"data": crypto.Encode(params, key)}).
 		ForceContentType("application/json").
-		SetHeader("referer", BuildShareReferer(shareCode, receiveCode)).
-		SetHeader("User-Agent", ua).
+		SetHeader("Accept", "application/json;charset=UTF-8").
+		SetHeader("User-Agent", shareDownurlUA(ua)).
 		SetResult(&result)
 
-	resp, err := req.Get(ApiDownloadGetShareUrl)
+	resp, err := req.Post(ApiDownloadShareDownurl)
 
 	if err := CheckErr(err, &result, resp); err != nil {
 		return nil, err
 	}
 
-	downloadInfo := result.Data
+	data, err := crypto.Decode(string(result.EncodedData), key)
+	if err != nil {
+		return nil, err
+	}
+
+	downloadInfo := SharedDownloadInfo{}
+	if err := json.Unmarshal(data, &downloadInfo); err != nil {
+		return nil, err
+	}
 	return &downloadInfo, nil
+}
+
+// shareDownurlUA picks the UA for the share downurl request: the caller's ua
+// only when it is a 115 client UA, otherwise the known-good UA115Browser.
+// The endpoint rejects plain browser and downloader UAs, while the CDN url it
+// returns works with any UA.
+func shareDownurlUA(ua string) string {
+	for _, marker := range []string{"115Browser", "115disk", "115Desktop", "115wangpan", "UDown"} {
+		if strings.Contains(ua, marker) {
+			return ua
+		}
+	}
+	return UA115Browser
 }

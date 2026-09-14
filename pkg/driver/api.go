@@ -34,6 +34,7 @@ const (
 	// download
 	ApiDownloadGetUrl        = "https://proapi.115.com/app/chrome/downurl"
 	ApiDownloadGetShareUrl   = "https://115cdn.com/webapi/share/downurl"
+	ApiDownloadShareDownurl  = "https://proapi.115.com/app/share/downurl"
 	AndroidApiDownloadGetUrl = "https://proapi.115.com/android/2.0/ufile/download"
 
 	// offline download
