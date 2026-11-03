@@ -7,6 +7,7 @@ import (
 
 	"github.com/SheltonZhu/115driver/cli/internal/output"
 	"github.com/SheltonZhu/115driver/cli/internal/resolver"
+	"github.com/SheltonZhu/115driver/pkg/driver"
 	"github.com/spf13/cobra"
 )
 
@@ -44,7 +45,11 @@ var uploadCmd = &cobra.Command{
 			fmt.Printf("Uploading %s (%s)...\n", fileName, output.FormatFileSize(stat.Size()))
 		}
 
-		err = client.RapidUploadOrByOSS(dirID, fileName, stat.Size(), f)
+		if stat.Size() >= 5*driver.GB {
+			err = client.RapidUploadOrByMultipart(dirID, fileName, stat.Size(), f)
+		} else {
+			err = client.RapidUploadOrByOSS(dirID, fileName, stat.Size(), f)
+		}
 		if err != nil {
 			return &exitError{code: output.ExitError, msg: fmt.Sprintf("Upload failed: %v", err)}
 		}
