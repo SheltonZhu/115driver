@@ -381,27 +381,28 @@ func (c *Pan115Client) UploadByMultipart(params *UploadOSSParams, fileSize int64
 	}
 
 	options.ThreadsNum = 1
-	if ossToken, err = c.GetOSSToken(); err != nil {
+	newBucket := func() error {
+		if ossToken, err = c.GetOSSToken(); err != nil {
+			return err
+		}
+		if ossClient, err = oss.New(
+			c.getOSSEndpoint(c.UseInternalUpload),
+			ossToken.AccessKeyID,
+			ossToken.AccessKeySecret,
+			oss.EnableMD5(true),
+			oss.EnableCRC(true),
+		); err != nil {
+			return err
+		}
+		bucket, err = ossClient.Bucket(params.Bucket)
 		return err
 	}
-
-	if ossClient, err = oss.New(
-		c.getOSSEndpoint(c.UseInternalUpload),
-		ossToken.AccessKeyID,
-		ossToken.AccessKeySecret,
-		oss.EnableMD5(true),
-		oss.EnableCRC(true),
-	); err != nil {
-		return err
-	}
-
-	if bucket, err = ossClient.Bucket(params.Bucket); err != nil {
+	if err = newBucket(); err != nil {
 		return err
 	}
 
 	// ossToken一小时后就会失效，所以每50分钟重新获取一次
-	ticker := time.NewTicker(options.TokenRefreshTime)
-	defer ticker.Stop()
+	refreshAt := time.Now().Add(options.TokenRefreshTime)
 	// 设置超时
 	timeout := time.NewTimer(options.Timeout)
 
@@ -442,14 +443,16 @@ func (c *Pan115Client) UploadByMultipart(params *UploadOSSParams, fileSize int64
 				}
 			}()
 			for chunk := range chunksCh {
-				var part oss.UploadPart // 出现错误就继续尝试，共尝试3次
-				for retry := 0; retry < 3; retry++ {
-					select {
-					case <-ticker.C:
-						if ossToken, err = c.GetOSSToken(); err != nil { // 到时重新获取ossToken
-							errCh <- errors.Wrap(err, "刷新token时出现错误")
+				var part oss.UploadPart // 出现错误就继续尝试，共尝试5次
+				for retry := 0; retry < 5; retry++ {
+					if retry > 0 {
+						time.Sleep(time.Duration(retry) * 2 * time.Second)
+					}
+					if time.Now().After(refreshAt) {
+						if err = newBucket(); err != nil {
+							continue
 						}
-					default:
+						refreshAt = time.Now().Add(options.TokenRefreshTime)
 					}
 
 					buf := make([]byte, chunk.Size)
@@ -483,11 +486,6 @@ func (c *Pan115Client) UploadByMultipart(params *UploadOSSParams, fileSize int64
 LOOP:
 	for {
 		select {
-		case <-ticker.C:
-			// 到时重新获取ossToken
-			if ossToken, err = c.GetOSSToken(); err != nil {
-				return err
-			}
 		case <-quit:
 			break LOOP
 		case <-errCh:
