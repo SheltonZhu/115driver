@@ -13,7 +13,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	hash "github.com/SheltonZhu/115driver/pkg/crypto"
@@ -380,30 +379,30 @@ func (c *Pan115Client) UploadByMultipart(params *UploadOSSParams, fileSize int64
 		}
 	}
 
-	options.ThreadsNum = 1
-	if ossToken, err = c.GetOSSToken(); err != nil {
+	newBucket := func() error {
+		if ossToken, err = c.GetOSSToken(); err != nil {
+			return err
+		}
+		if ossClient, err = oss.New(
+			c.getOSSEndpoint(c.UseInternalUpload),
+			ossToken.AccessKeyID,
+			ossToken.AccessKeySecret,
+			oss.EnableMD5(true),
+			oss.EnableCRC(true),
+		); err != nil {
+			return err
+		}
+		bucket, err = ossClient.Bucket(params.Bucket)
 		return err
 	}
-
-	if ossClient, err = oss.New(
-		c.getOSSEndpoint(c.UseInternalUpload),
-		ossToken.AccessKeyID,
-		ossToken.AccessKeySecret,
-		oss.EnableMD5(true),
-		oss.EnableCRC(true),
-	); err != nil {
-		return err
-	}
-
-	if bucket, err = ossClient.Bucket(params.Bucket); err != nil {
+	if err = newBucket(); err != nil {
 		return err
 	}
 
 	// ossToken一小时后就会失效，所以每50分钟重新获取一次
-	ticker := time.NewTicker(options.TokenRefreshTime)
-	defer ticker.Stop()
+	refreshAt := time.Now().Add(options.TokenRefreshTime)
 	// 设置超时
-	timeout := time.NewTimer(options.Timeout)
+	deadline := time.Now().Add(options.Timeout)
 
 	if chunks, err = SplitFile(f.Name(), fileSize); err != nil {
 		return err
@@ -418,83 +417,40 @@ func (c *Pan115Client) UploadByMultipart(params *UploadOSSParams, fileSize int64
 		return err
 	}
 
-	wg := sync.WaitGroup{}
-	wg.Add(len(chunks))
-
-	chunksCh := make(chan oss.FileChunk)
-	errCh := make(chan error)
-	UploadedPartsCh := make(chan oss.UploadPart)
-	quit := make(chan struct{})
-
-	// producter
-	go chunksProducer(chunksCh, chunks)
-	go func() {
-		wg.Wait()
-		quit <- struct{}{}
-	}()
-
-	// consumers
-	for i := 0; i < options.ThreadsNum; i++ {
-		go func(threadId int) {
-			defer func() {
-				if r := recover(); r != nil {
-					errCh <- fmt.Errorf("recovered in %v", r)
-				}
-			}()
-			for chunk := range chunksCh {
-				var part oss.UploadPart // 出现错误就继续尝试，共尝试3次
-				for retry := 0; retry < 3; retry++ {
-					select {
-					case <-ticker.C:
-						if ossToken, err = c.GetOSSToken(); err != nil { // 到时重新获取ossToken
-							errCh <- errors.Wrap(err, "刷新token时出现错误")
-						}
-					default:
-					}
-
-					buf := make([]byte, chunk.Size)
-					if _, err = f.ReadAt(buf, chunk.Offset); err != nil && !errors.Is(err, io.EOF) {
-						continue
-					}
-
-					if part, err = bucket.UploadPart(
-						imur,
-						bytes.NewBuffer(buf),
-						chunk.Size,
-						chunk.Number,
-						OssOption(params, ossToken)...); err == nil {
-						break
-					}
-				}
-				if err != nil {
-					errCh <- errors.Wrap(err, fmt.Sprintf("上传 %s 的第%d个分片时出现错误：%v", f.Name(), chunk.Number, err))
-				}
-				UploadedPartsCh <- part
-			}
-		}(i)
-	}
-
-	go func() {
-		for part := range UploadedPartsCh {
-			parts = append(parts, part)
-			wg.Done()
-		}
-	}()
-LOOP:
-	for {
-		select {
-		case <-ticker.C:
-			// 到时重新获取ossToken
-			if ossToken, err = c.GetOSSToken(); err != nil {
-				return err
-			}
-		case <-quit:
-			break LOOP
-		case <-errCh:
-			return err
-		case <-timeout.C:
+	for _, chunk := range chunks {
+		if time.Now().After(deadline) {
 			return fmt.Errorf("time out")
 		}
+		var part oss.UploadPart // 出现错误就继续尝试，共尝试5次
+		for retry := 0; retry < 5; retry++ {
+			if retry > 0 {
+				time.Sleep(time.Duration(retry) * 2 * time.Second)
+			}
+			if time.Now().After(refreshAt) {
+				if err = newBucket(); err != nil {
+					continue
+				}
+				refreshAt = time.Now().Add(options.TokenRefreshTime)
+			}
+
+			buf := make([]byte, chunk.Size)
+			if _, err = f.ReadAt(buf, chunk.Offset); err != nil && !errors.Is(err, io.EOF) {
+				continue
+			}
+
+			if part, err = bucket.UploadPart(
+				imur,
+				bytes.NewBuffer(buf),
+				chunk.Size,
+				chunk.Number,
+				OssOption(params, ossToken)...); err == nil {
+				break
+			}
+		}
+		if err != nil {
+			return errors.Wrap(err, fmt.Sprintf("上传 %s 的第%d个分片时出现错误：%v", f.Name(), chunk.Number, err))
+		}
+		parts = append(parts, part)
 	}
 
 	if _, err := bucket.CompleteMultipartUpload(imur, parts,
@@ -510,12 +466,6 @@ LOOP:
 		return err
 	}
 	return uploadResult.Err(string(bodyBytes))
-}
-
-func chunksProducer(ch chan oss.FileChunk, chunks []oss.FileChunk) {
-	for _, chunk := range chunks {
-		ch <- chunk
-	}
 }
 
 // SplitFile pplitFile
