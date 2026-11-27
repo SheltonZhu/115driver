@@ -12,6 +12,7 @@ type JSONFile struct {
 	IsDir      bool   `json:"is_dir"`
 	UpdateTime string `json:"update_time,omitempty"`
 	FileID     string `json:"file_id"`
+	ParentID   string `json:"parent_id,omitempty"`
 	PickCode   string `json:"pick_code,omitempty"`
 	Sha1       string `json:"sha1,omitempty"`
 }
@@ -31,6 +32,7 @@ func FileToJSON(f interface {
 		FileID:     f.GetID(),
 	}
 	if df, ok := f.(*driver.File); ok {
+		j.ParentID = df.ParentID
 		j.PickCode = df.PickCode
 		j.Sha1 = df.Sha1
 	}

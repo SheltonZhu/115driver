@@ -263,6 +263,12 @@ All commands support `--json` for machine-readable output:
 115driver --json info
 ```
 
+For `ls --json` and `search --json`, file and directory entries include `parent_id` when the parent directory is known:
+
+- For a file, `parent_id` identifies its containing directory; for a directory, it identifies that directory's parent.
+- `parent_id: "0"` is the root-directory marker and is emitted as-is.
+- A missing `parent_id` means the parent is unknown (for example, in some search results), not that the entry is in the root directory.
+
 ### Shell Completion
 
 ```bash
